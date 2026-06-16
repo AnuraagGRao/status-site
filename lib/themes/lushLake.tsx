@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ThemeDefinition, ThemePalettes, ThemeComponentProps, ThemeName } from "./themeTypes";
+import { ThemeDefinition, ThemePalettes, ThemeComponentProps } from "./themeTypes";
 
 // ── LCG PRNG ────────────────────────────────────────────────────────
 function makePRNG(seed: number) {
@@ -112,7 +112,7 @@ interface Tree {
   h: number;
 }
 
-function generateTrees(seed: number, viewW: number, viewH: number): Tree[] {
+function generateTrees(seed: number, viewW: number): Tree[] {
   const rng = makePRNG(seed);
   const trees: Tree[] = [];
   const treeCount = 35;
@@ -131,12 +131,10 @@ function generateTrees(seed: number, viewW: number, viewH: number): Tree[] {
 function LushLakeTheme(props: ThemeComponentProps) {
   const { tod, palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
 
-  const rng = makePRNG(variantSeed);
   const GEN_CLOUDS = generateClouds(variantSeed);
-  const GEN_TREES = generateTrees(variantSeed, viewW, viewH);
+  const GEN_TREES = generateTrees(variantSeed, viewW);
   const GEN_STARS = generateStars(variantSeed);
 
-  const animDuration = prefersReducedMotion ? 0 : 1.5;
   const cloudDuration = prefersReducedMotion ? 0.1 : 6;
   const parallaxDuration = prefersReducedMotion ? 0.1 : 20;
 

@@ -79,7 +79,6 @@ function generateStars(seed: number): Star[] {
 
 function generateNebulae(seed: number): Nebula[] {
   const rng = makePRNG(seed);
-  const nebulae: Nebula[] = [];
 
   const nebulaNoise = [
     { color: "#FF00FF", cx: "25%", cy: "20%" },
@@ -96,7 +95,7 @@ function generateNebulae(seed: number): Nebula[] {
 }
 
 function DeepCosmosTheme(props: ThemeComponentProps) {
-  const { tod, palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
+  const { palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
 
   const stars = generateStars(variantSeed);
   const nebulae = generateNebulae(variantSeed);

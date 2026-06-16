@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useLayoutEffect, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 
 import AnimatedBackground from "@/components/AnimatedBackground";
@@ -15,11 +16,10 @@ import {
   formatDate,
   type TimeOfDay,
 } from "@/lib/timeUtils";
-import { SCENE_WIDTH, SCENE_HEIGHT } from "@/lib/sceneConstants";
 import { usePageVisibility } from "@/lib/hooks/usePageVisibility";
 import { useSaveScenery } from "@/lib/hooks/useSaveScenery";
 import { usePrefersDarkMode } from "@/lib/hooks/usePrefersDarkMode";
-import { getThemeNames, type ThemeName } from "@/lib/themes";
+import { type ThemeName } from "@/lib/themes";
 
 export default function Home() {
   /* ── Time state ─────────────────────────────────────────────────── */
@@ -45,7 +45,7 @@ export default function Home() {
   );
 
   // Save scenery with error handling and loading state
-  const { isLoading: saveLoading, error: saveError, save: handleSaveAction, reset: resetSaveState } = useSaveScenery(
+  const { isLoading: saveLoading, error: saveError, save: handleSaveAction } = useSaveScenery(
     bgRef,
     "scenery",
     () => {
@@ -59,11 +59,15 @@ export default function Home() {
   );
 
   // Avoid hydration mismatch by rendering stable placeholders on the server
-  useEffect(() => {
+  useLayoutEffect(() => {
     setMounted(true);
-    // On first mount, apply user's color scheme preference
-    setDarkMode(prefersDark);
-  }, [prefersDark]);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (mounted) {
+      setDarkMode(prefersDark);
+    }
+  }, [prefersDark, mounted]);
 
   /* Live clock — only ticks when no override is active */
   useEffect(() => {

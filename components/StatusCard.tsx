@@ -167,10 +167,10 @@ export default function StatusCard({ time, date, status }: StatusCardProps) {
                 key={`${status}-${currentItemIndex}`}
                 initial={{
                   opacity: 0,
-                  x: isAlternateDirection ? 60 : -60,
-                  y: isAlternateDirection ? 40 : -40,
+                  x: isAlternateDirection ? 14 : -14,
+                  y: isAlternateDirection ? 14 : -14,
                   scale: 0.2,
-                  rotateZ: isAlternateDirection ? 15 : -15,
+                  rotateZ: isAlternateDirection ? 42 : -42,
                 }}
                 animate={{
                   opacity: [0, 0.2, 0.05, 0.4, 0.1, 0.9, 0.7, 1, 1, 1],

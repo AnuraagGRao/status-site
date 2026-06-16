@@ -64,7 +64,6 @@ function TropicalBeachTheme(props: ThemeComponentProps) {
   const { tod, palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
 
   const palms = generatePalmTrees(variantSeed, viewW);
-  const parallaxDuration = prefersReducedMotion ? 0.1 : 20;
   const waveDuration = prefersReducedMotion ? 0.1 : 8;
 
   const isMoon = tod === "evening" || tod === "night";

@@ -56,12 +56,6 @@ export default function Controls({
     onTimeChange(d);
   };
 
-  const handleRandomizePreset = () => {
-    const presets: TimeOfDay[] = ["day", "afternoon", "evening", "night"];
-    const pick = presets[Math.floor(Math.random() * presets.length)];
-    setPreset(pick);
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}

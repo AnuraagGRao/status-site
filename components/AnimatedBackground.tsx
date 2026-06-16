@@ -48,7 +48,10 @@ export default function AnimatedBackground({
   });
 
   return (
-    <div ref={bgRef as any} className="w-full h-full">
+    <div
+      ref={bgRef as React.Ref<HTMLDivElement>}
+      className="w-full h-full"
+    >
       {renderedTheme}
     </div>
   );

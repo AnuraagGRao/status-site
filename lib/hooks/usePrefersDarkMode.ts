@@ -5,14 +5,16 @@ import { useEffect, useState } from "react";
  * a value that can be used to auto-enable dark mode.
  */
 export function usePrefersDarkMode() {
-  const [prefersDark, setPrefersDark] = useState<boolean>(false);
+  const [prefersDark, setPrefersDark] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+    }
+    return false;
+  });
 
   useEffect(() => {
-    // Check initial preference
-    const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    setPrefersDark(darkModeQuery.matches);
-
     // Listen for changes
+    const darkModeQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e: MediaQueryListEvent) => {
       setPrefersDark(e.matches);
     };
