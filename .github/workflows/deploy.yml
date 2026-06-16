@@ -35,9 +35,8 @@ jobs:
 
       - name: Build (static export)
         run: npm run build
-        env:
-          # Matches the GitHub repository name so assets resolve under /status-site/
-          NEXT_PUBLIC_BASE_PATH: /status-site
+        # Note: No NEXT_PUBLIC_BASE_PATH set because we're using a custom domain (status.anuraaggrao.com)
+        # which serves at the root (/), not at a subpath like /status-site/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
