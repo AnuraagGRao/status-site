@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Briefcase, Moon, Clock } from "lucide-react";
 import { StatusType } from "@/lib/timeUtils";
@@ -10,12 +11,34 @@ interface StatusCardProps {
   status: StatusType;
 }
 
-const WORKING_TEXT = "Building backend systems, handling server logic, or deploying code.";
-const AWAY_TEXT =
-  "Grinding Valorant, working on Tetra Overflow Ultra, or deep in creative exploration/rest.";
+const WORKING_ITEMS = [
+  "Debugging",
+  "Diving into new repos",
+  "Deploying code"
+];
+
+const AWAY_ITEMS = [
+  "Grinding Valorant",
+  "Playing single player games",
+  "Just taking a break from the screen",
+  "Sleeping lol"
+];
 
 export default function StatusCard({ time, date, status }: StatusCardProps) {
   const isWorking = status === "working";
+  const items = isWorking ? WORKING_ITEMS : AWAY_ITEMS;
+  
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
+  const isAlternateDirection = currentItemIndex % 2 === 1;
+
+  useEffect(() => {
+    // Cycle through items every 3 seconds
+    const interval = setInterval(() => {
+      setCurrentItemIndex((prev) => (prev + 1) % items.length);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [items.length]);
 
   return (
     <motion.div
@@ -64,10 +87,13 @@ export default function StatusCard({ time, date, status }: StatusCardProps) {
             <span
               className="text-white font-light tracking-tight leading-none select-none"
               style={{ fontSize: "clamp(2.2rem, 5vw, 3.2rem)", fontFeatureSettings: '"tnum"' }}
+              suppressHydrationWarning
             >
               {time}
             </span>
-            <span className="text-white/55 text-sm font-light tracking-wide">{date}</span>
+            <span className="text-white/55 text-sm font-light tracking-wide" suppressHydrationWarning>
+              {date}
+            </span>
           </motion.div>
 
           {/* ── Divider ───────────────────────────────── */}
@@ -138,14 +164,37 @@ export default function StatusCard({ time, date, status }: StatusCardProps) {
             {/* Status description */}
             <AnimatePresence mode="wait">
               <motion.p
-                key={status}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.45, ease: "easeOut" }}
-                className="text-white/70 text-sm text-center leading-relaxed font-light max-w-xs"
+                key={`${status}-${currentItemIndex}`}
+                initial={{
+                  opacity: 0,
+                  x: isAlternateDirection ? 60 : -60,
+                  y: isAlternateDirection ? 40 : -40,
+                  scale: 0.2,
+                  rotateZ: isAlternateDirection ? 15 : -15,
+                }}
+                animate={{
+                  opacity: [0, 0.2, 0.05, 0.4, 0.1, 0.9, 0.7, 1, 1, 1],
+                  x: isAlternateDirection ? [0, 20, -25, 15, -30, 10, -15, 5, -8, 0] : [0, -20, 25, -15, 30, -10, 15, -5, 8, 0],
+                  y: isAlternateDirection ? [0, -15, 25, -20, 18, -12, 8, -5, 2, 0] : [0, 15, -25, 20, -18, 12, -8, 5, -2, 0],
+                  scale: [0.2, 1.4, 0.6, 1.2, 0.5, 1.3, 0.8, 1.1, 1, 1],
+                  rotateZ: isAlternateDirection ? [15, -8, 8, -6, 8, -4, 3, -1, 0, 0] : [-15, 8, -8, 6, -8, 4, -3, 1, 0, 0],
+                  skewX: isAlternateDirection ? [-5, -3, 4, -2, 2, -1, 0, 0, 0, 0] : [5, 3, -4, 2, -2, 1, 0, 0, 0, 0],
+                }}
+                exit={{
+                  opacity: 0,
+                  x: isAlternateDirection ? 7 : -7,
+                  y: isAlternateDirection ? 7 : -7,
+                  scale: 0.2,
+                  rotateZ: isAlternateDirection ? 69 : -69,
+                }}
+                transition={{
+                  duration: 0.6,
+                  times: [0, 0.1, 0.2, 0.3, 0.45, 0.6, 0.75, 0.9, 0.95, 1],
+                  ease: "easeOut"
+                }}
+                className="text-white/70 text-sm text-center leading-relaxed font-light max-w-xs origin-center"
               >
-                {isWorking ? WORKING_TEXT : AWAY_TEXT}
+                {items[currentItemIndex]}
               </motion.p>
             </AnimatePresence>
           </div>

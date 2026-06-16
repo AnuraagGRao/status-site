@@ -12,6 +12,12 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,       // next/image optimization is unavailable in static export
   },
+  // Ensure the correct workspace root is used in nested folders (Windows paths with spaces, etc.)
+  // Prevents Turbopack from picking a higher-level lockfile as the monorepo root.
+  turbopack: {
+    // Use the directory containing this config as the root.
+    root: __dirname,
+  },
 };
 
 export default nextConfig;
