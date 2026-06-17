@@ -1,14 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Briefcase, Moon, Clock } from "lucide-react";
 import { StatusType } from "@/lib/timeUtils";
+import { getTextColorForPalette, getSecondaryTextColorForPalette } from "@/lib/colorUtils";
+import { PaletteConfig } from "@/lib/themes/themeTypes";
+import { COLOR_PALETTE } from "@/lib/colorPalette";
 
 interface StatusCardProps {
   time: string;
   date: string;
   status: StatusType;
+  palette?: PaletteConfig;
 }
 
 const WORKING_ITEMS = [
@@ -24,12 +28,26 @@ const AWAY_ITEMS = [
   "Sleeping lol"
 ];
 
-export default function StatusCard({ time, date, status }: StatusCardProps) {
+export default function StatusCard({ time, date, status, palette }: StatusCardProps) {
   const isWorking = status === "working";
   const items = isWorking ? WORKING_ITEMS : AWAY_ITEMS;
   
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const isAlternateDirection = currentItemIndex % 2 === 1;
+
+  // Compute colors based on palette
+  const { mainText, secondaryText } = useMemo(() => {
+    if (!palette) {
+      return {
+        mainText: "#ffffff",
+        secondaryText: "#e0e0e0",
+      };
+    }
+    return {
+      mainText: getTextColorForPalette(palette.sky),
+      secondaryText: getSecondaryTextColorForPalette(palette.sky),
+    };
+  }, [palette]);
 
   useEffect(() => {
     // Cycle through items every 3 seconds
@@ -61,11 +79,11 @@ export default function StatusCard({ time, date, status }: StatusCardProps) {
       >
         {/* Top accent bar */}
         <motion.div
-          className="h-1 w-full"
+          className="h-1.5 w-full"
           animate={{
             background: isWorking
-              ? "linear-gradient(90deg,#667eea,#764ba2)"
-              : "linear-gradient(90deg,#4facfe,#00f2fe)",
+              ? `linear-gradient(90deg, ${COLOR_PALETTE.neon.purple}, ${COLOR_PALETTE.neon.magenta})`
+              : `linear-gradient(90deg, ${COLOR_PALETTE.neon.cyan}, ${COLOR_PALETTE.neon.cyan})`,
           }}
           transition={{ duration: 1 }}
         />
@@ -79,19 +97,34 @@ export default function StatusCard({ time, date, status }: StatusCardProps) {
             className="flex flex-col items-center gap-1"
           >
             <div className="flex items-center gap-2 mb-1">
-              <Clock size={14} className="text-white/50" />
-              <span className="text-white/50 text-xs font-medium tracking-widest uppercase">
+              <Clock size={14} style={{ color: `${secondaryText}80` }} />
+              <span
+                className="text-xs font-medium tracking-widest uppercase"
+                style={{ color: `${secondaryText}80` }}
+              >
                 Local Time
               </span>
             </div>
             <span
-              className="text-white font-light tracking-tight leading-none select-none"
-              style={{ fontSize: "clamp(2.2rem, 5vw, 3.2rem)", fontFeatureSettings: '"tnum"' }}
+              className="font-light tracking-tight leading-none select-none"
+              style={{
+                fontSize: "clamp(2.2rem, 5vw, 3.2rem)",
+                fontFeatureSettings: '"tnum"',
+                color: mainText,
+                textShadow: `0 2px 8px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.1)`,
+              }}
               suppressHydrationWarning
             >
               {time}
             </span>
-            <span className="text-white/55 text-sm font-light tracking-wide" suppressHydrationWarning>
+            <span
+              className="text-sm font-light tracking-wide"
+              style={{
+                color: `${secondaryText}cc`,
+                textShadow: `0 1px 4px rgba(0,0,0,0.1)`,
+              }}
+              suppressHydrationWarning
+            >
               {date}
             </span>
           </motion.div>
@@ -143,9 +176,8 @@ export default function StatusCard({ time, date, status }: StatusCardProps) {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 8 }}
                   transition={{ duration: 0.3 }}
-                  className={`text-xs font-semibold tracking-widest uppercase ${
-                    isWorking ? "text-violet-200" : "text-cyan-200"
-                  }`}
+                  className="text-xs font-semibold tracking-widest uppercase"
+                  style={{ color: mainText }}
                 >
                   {isWorking ? "Working" : "Away"}
                 </motion.span>
@@ -192,7 +224,8 @@ export default function StatusCard({ time, date, status }: StatusCardProps) {
                   times: [0, 0.1, 0.2, 0.3, 0.45, 0.6, 0.75, 0.9, 0.95, 1],
                   ease: "easeOut"
                 }}
-                className="text-white/70 text-sm text-center leading-relaxed font-light max-w-xs origin-center"
+                className="text-sm text-center leading-relaxed font-light max-w-xs origin-center"
+                style={{ color: `${secondaryText}b3` }}
               >
                 {items[currentItemIndex]}
               </motion.p>

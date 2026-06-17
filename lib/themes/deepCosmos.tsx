@@ -36,7 +36,14 @@ const DEEP_COSMOS_PALETTES: ThemePalettes = {
     ground: "#050510",
     primary: "#330066",
     secondary: "#1a0033",
-  },
+    amoled: {
+      sky: ["#000000", "#0d0015"],
+      horizon: "#1a0033",
+      ground: "#000000",
+      primary: "#ff00ff",
+      secondary: "#00ffff",
+    },
+  }
 };
 
 interface Star {
@@ -85,6 +92,9 @@ function generateNebulae(seed: number): Nebula[] {
     { color: "#00FFFF", cx: "75%", cy: "30%" },
     { color: "#FF00AA", cx: "15%", cy: "50%" },
     { color: "#00FF55", cx: "85%", cy: "45%" },
+    { color: "#FF00FF", cx: "50%", cy: "65%" },
+    { color: "#00FFFF", cx: "35%", cy: "75%" },
+    { color: "#FF00AA", cx: "70%", cy: "70%" },
   ];
 
   return nebulaNoise.map((n) => ({
@@ -98,7 +108,7 @@ function DeepCosmosTheme(props: ThemeComponentProps) {
   const { palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
 
   const stars = generateStars(variantSeed);
-  const nebulae = generateNebulae(variantSeed);
+  const nebulae = generateNebulae(variantSeed + 1);
   const parallaxDuration = prefersReducedMotion ? 0.1 : 40;
   const nebulaDuration = prefersReducedMotion ? 0.1 : 15;
 
@@ -157,12 +167,12 @@ function DeepCosmosTheme(props: ThemeComponentProps) {
             fill={nebula.color}
             filter="url(#nebulaBlur)"
             animate={{
-              opacity: prefersReducedMotion ? [0.3, 0.3] : [0.2, 0.5, 0.2],
+              opacity: prefersReducedMotion ? [0.3, 0.3] : [0.15, 0.5, 0.15],
+              r: prefersReducedMotion ? [nebula.r, nebula.r] : [nebula.r * 0.9, nebula.r, nebula.r * 0.9],
             }}
             transition={{
-              duration: nebulaDuration + i * 2,
-              ease: "easeInOut",
-              repeat: Infinity,
+              opacity: { duration: nebulaDuration + i * 2, ease: "easeInOut", repeat: Infinity },
+              r: { duration: (nebulaDuration + i * 2) * 1.2, ease: "easeInOut", repeat: Infinity },
             }}
           />
         </motion.g>

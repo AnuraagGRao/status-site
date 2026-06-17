@@ -19,12 +19,13 @@ import {
 import { usePageVisibility } from "@/lib/hooks/usePageVisibility";
 import { useSaveScenery } from "@/lib/hooks/useSaveScenery";
 import { usePrefersDarkMode } from "@/lib/hooks/usePrefersDarkMode";
-import { type ThemeName } from "@/lib/themes";
+import { getTextColorForPalette, getSecondaryTextColorForPalette } from "@/lib/colorUtils";
+import { type ThemeName, getThemeNames, THEME_REGISTRY } from "@/lib/themes";
 
 export default function Home() {
   /* ── Time state ─────────────────────────────────────────────────── */
   const [now, setNow] = useState<Date>(() => new Date());
-  const [overrideTime, setOverrideTime] = useState<Date | null>(null);
+  const [visualTimeOverride, setVisualTimeOverride] = useState<TimeOfDay | null>(null);
   const [mounted, setMounted] = useState(false);
   const [toast, setToast] = useState(false);
   const bgRef = useRef<SVGSVGElement | null>(null);
@@ -69,25 +70,21 @@ export default function Home() {
     }
   }, [prefersDark, mounted]);
 
-  /* Live clock — only ticks when no override is active */
+  /* Live clock — always ticks to show current time */
   useEffect(() => {
-    if (overrideTime) {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      return;
-    }
     intervalRef.current = setInterval(() => setNow(new Date()), 1000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [overrideTime]);
+  }, []);
 
-  /* Effective time: manual override wins, otherwise live clock */
-  const effectiveTime = overrideTime ?? now;
+  /* Effective time: always use live system time (no overrides) */
+  const effectiveTime = now;
   // Stable fallback date (midday avoids TZ day-boundary shifts)
   const fallbackDate = new Date("2020-01-01T12:00:00");
 
   const status = mounted ? getStatus(effectiveTime) : ("away" as const);
-  const tod: TimeOfDay = mounted ? getTimeOfDay(effectiveTime) : ("afternoon" as TimeOfDay);
+  const tod: TimeOfDay = mounted ? (visualTimeOverride ?? getTimeOfDay(effectiveTime)) : ("afternoon" as TimeOfDay);
   const timeStr = mounted ? formatTime(effectiveTime) : "--:--:--";
   const dateStr = mounted ? formatDate(effectiveTime) : formatDate(fallbackDate);
 
@@ -133,31 +130,48 @@ export default function Home() {
           className="text-center mb-2"
         >
           <h1
-            className="text-white/90 font-semibold tracking-tight"
-            style={{ fontSize: "clamp(1.1rem, 3vw, 1.4rem)" }}
+            className="font-semibold tracking-tight"
+            style={{
+              fontSize: "clamp(1.1rem, 3vw, 1.4rem)",
+              color: mounted ? (THEME_REGISTRY[theme][tod]?.sky ? getTextColorForPalette(THEME_REGISTRY[theme][tod].sky) : "#ffffff") : "#ffffff",
+              textShadow: `0 2px 8px rgba(0,0,0,0.15)`,
+            }}
           >
             Status
           </h1>
-          <p className="text-white/40 text-xs tracking-widest uppercase mt-0.5">
+          <p
+            className="text-xs tracking-widest uppercase mt-0.5"
+            style={{
+              color: mounted ? (THEME_REGISTRY[theme][tod]?.sky ? getSecondaryTextColorForPalette(THEME_REGISTRY[theme][tod].sky) : "#ffffff") + "80" : "#ffffff80",
+              textShadow: `0 1px 4px rgba(0,0,0,0.1)`,
+            }}
+          >
             Activity Tracker
           </p>
         </motion.div>
 
         {/* Status card */}
-        <StatusCard time={timeStr} date={dateStr} status={status} />
+        <StatusCard time={timeStr} date={dateStr} status={status} palette={mounted ? THEME_REGISTRY[theme][tod] : undefined} />
 
         {/* Scene controls */}
         <Controls
-          overrideTime={overrideTime}
-          onTimeChange={setOverrideTime}
+          visualTimeOverride={visualTimeOverride}
+          onVisualTimeChange={setVisualTimeOverride}
           onSaveScenery={handleSaveAction}
           onSaveLoading={saveLoading}
           onSaveError={saveError}
           onRandomizeScenery={() => setSceneVariant((v) => (v * 1664525 + 1013904223) >>> 0)}
+          onRandomizeAll={() => {
+            setSceneVariant((v) => (v * 1664525 + 1013904223) >>> 0);
+            const themeNames = getThemeNames();
+            const randomThemeIdx = Math.floor(Math.random() * themeNames.length);
+            setTheme(themeNames[randomThemeIdx]);
+          }}
           darkModeEnabled={effectiveDarkMode}
           onToggleDarkMode={() => setDarkMode((v) => !v)}
           currentTheme={theme}
           onThemeChange={setTheme}
+          palette={mounted ? THEME_REGISTRY[theme][tod] : undefined}
         />
       </div>
 

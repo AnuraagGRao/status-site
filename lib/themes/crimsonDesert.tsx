@@ -36,7 +36,14 @@ const CRIMSON_DESERT_PALETTES: ThemePalettes = {
     ground: "#0d0606",
     primary: "#1a0d00",
     secondary: "#2d1a0d",
-  },
+    amoled: {
+      sky: ["#000000", "#1a0d00"],
+      horizon: "#330000",
+      ground: "#000000",
+      primary: "#ff6600",
+      secondary: "#ffaa33",
+    },
+  }
 };
 
 interface Cactus {
@@ -81,11 +88,55 @@ function generateDunes(seed: number): Dune[] {
   return dunes;
 }
 
+interface Rock {
+  x: number;
+  y: number;
+  size: number;
+}
+
+function generateDesertRocks(seed: number, viewW: number, viewH: number): Rock[] {
+  const rng = makePRNG(seed);
+  const rocks: Rock[] = [];
+
+  for (let i = 0; i < 8; i++) {
+    rocks.push({
+      x: rng() * viewW * 0.9 + viewW * 0.05,
+      y: viewH * (0.65 + rng() * 0.15),
+      size: rng() * 20 + 8,
+    });
+  }
+
+  return rocks;
+}
+
+interface DesertPlant {
+  x: number;
+  y: number;
+  scale: number;
+}
+
+function generateDesertPlants(seed: number, viewW: number): DesertPlant[] {
+  const rng = makePRNG(seed);
+  const plants: DesertPlant[] = [];
+
+  for (let i = 0; i < 6; i++) {
+    plants.push({
+      x: rng() * viewW * 0.8 + viewW * 0.1,
+      y: rng() * 0.1 + 0.75,
+      scale: rng() * 0.4 + 0.6,
+    });
+  }
+
+  return plants;
+}
+
 function CrimsonDesertTheme(props: ThemeComponentProps) {
   const { tod, palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
 
   const cacti = generateCacti(variantSeed, viewW);
   const dunes = generateDunes(variantSeed);
+  const rocks = generateDesertRocks(variantSeed + 1, viewW, viewH);
+  const desertPlants = generateDesertPlants(variantSeed + 2, viewW);
   const parallaxDuration = prefersReducedMotion ? 0.1 : 25;
   const hazeDuration = prefersReducedMotion ? 0.1 : 12;
 
@@ -174,6 +225,53 @@ function CrimsonDesertTheme(props: ThemeComponentProps) {
           />
         </motion.g>
       ))}
+
+      {/* Desert rocks */}
+      {rocks.map((rock, i) => (
+        <motion.g
+          key={`rock-${i}`}
+          animate={{
+            y: prefersReducedMotion ? [0, 0] : [0, 2, 0],
+            opacity: prefersReducedMotion ? [0.8, 0.8] : [0.7, 0.9, 0.7],
+          }}
+          transition={{
+            duration: 3.5 + i * 0.25,
+            ease: "easeInOut",
+            repeat: Infinity,
+          }}
+        >
+          <ellipse cx={rock.x} cy={rock.y + rock.size * 0.2} rx={rock.size * 0.8} ry={rock.size * 0.2} fill="rgba(0,0,0,0.15)" />
+          <polygon
+            points={`${rock.x - rock.size},${rock.y} ${rock.x + rock.size},${rock.y} ${rock.x + rock.size * 0.6},${rock.y + rock.size} ${rock.x - rock.size * 0.6},${rock.y + rock.size}`}
+            fill={palette.secondary}
+            opacity="0.8"
+          />
+        </motion.g>
+      ))}
+
+      {/* Small desert plants/shrubs */}
+      {desertPlants.map((plant, i) => (
+        <motion.g
+          key={`plant-${i}`}
+          transform={`translate(${plant.x}, ${plant.y * viewH})`}
+          animate={{
+            scale: prefersReducedMotion ? [1, 1] : [1, 1.08, 1],
+            opacity: prefersReducedMotion ? [0.7, 0.7] : [0.6, 0.8, 0.6],
+          }}
+          transition={{
+            duration: 2.5 + i * 0.2,
+            ease: "easeInOut",
+            repeat: Infinity,
+          }}
+        >
+          <circle cx={0} cy={0} r={6 * plant.scale} fill={palette.primary} opacity="0.7" />
+          <circle cx={-8 * plant.scale} cy={3 * plant.scale} r={4 * plant.scale} fill={palette.primary} opacity="0.6" />
+          <circle cx={8 * plant.scale} cy={3 * plant.scale} r={4 * plant.scale} fill={palette.primary} opacity="0.6" />
+          <circle cx={0} cy={8 * plant.scale} r={3 * plant.scale} fill={palette.primary} opacity="0.5" />
+        </motion.g>
+      ))}
+
+      {/* 
 
       {/* Cacti */}
       {cacti.map((cactus, i) => (

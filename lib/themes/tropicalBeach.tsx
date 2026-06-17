@@ -36,7 +36,14 @@ const TROPICAL_BEACH_PALETTES: ThemePalettes = {
     ground: "#263238",
     primary: "#1A237E",
     secondary: "#0D47A1",
-  },
+    amoled: {
+      sky: ["#000000", "#001a33"],
+      horizon: "#003d66",
+      ground: "#000000",
+      primary: "#00ccff",
+      secondary: "#0099ff",
+    },
+  }
 };
 
 interface PalmTree {
@@ -60,10 +67,52 @@ function generatePalmTrees(seed: number, viewW: number): PalmTree[] {
   return palms;
 }
 
+interface Seashell {
+  x: number;
+  rotation: number;
+  scale: number;
+}
+
+function generateSeashells(seed: number, viewW: number): Seashell[] {
+  const rng = makePRNG(seed);
+  const shells: Seashell[] = [];
+
+  for (let i = 0; i < 12; i++) {
+    shells.push({
+      x: rng() * viewW,
+      rotation: rng() * 360,
+      scale: rng() * 0.5 + 0.6,
+    });
+  }
+
+  return shells;
+}
+
+interface BeachBird {
+  x: number;
+  scale: number;
+}
+
+function generateBeachBirds(seed: number, viewW: number): BeachBird[] {
+  const rng = makePRNG(seed);
+  const birds: BeachBird[] = [];
+
+  for (let i = 0; i < 4; i++) {
+    birds.push({
+      x: rng() * viewW,
+      scale: rng() * 0.3 + 0.7,
+    });
+  }
+
+  return birds;
+}
+
 function TropicalBeachTheme(props: ThemeComponentProps) {
   const { tod, palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
 
   const palms = generatePalmTrees(variantSeed, viewW);
+  const shells = generateSeashells(variantSeed + 1, viewW);
+  const beachBirds = generateBeachBirds(variantSeed + 2, viewW);
   const waveDuration = prefersReducedMotion ? 0.1 : 8;
 
   const isMoon = tod === "evening" || tod === "night";
@@ -149,6 +198,70 @@ function TropicalBeachTheme(props: ThemeComponentProps) {
 
       {/* Sandy shore curve */}
       <path d={`M0,${viewH * 0.72} Q${viewW * 0.5},${viewH * 0.70} ${viewW},${viewH * 0.72} L${viewW},${viewH} L0,${viewH} Z`} fill={palette.ground} />
+
+      {/* Seashells on sand */}
+      {shells.map((shell, i) => (
+        <motion.g
+          key={`shell-${i}`}
+          transform={`translate(${shell.x}, ${viewH * 0.735}) rotate(${shell.rotation})`}
+          animate={{
+            opacity: prefersReducedMotion ? [0.6, 0.6] : [0.4, 0.7, 0.4],
+            y: prefersReducedMotion ? [0, 0] : [0, 2, 0],
+          }}
+          transition={{
+            opacity: { duration: 3 + i * 0.2, ease: "easeInOut", repeat: Infinity },
+            y: { duration: 2.5 + i * 0.15, ease: "easeInOut", repeat: Infinity },
+          }}
+        >
+          <path
+            d={`M${-8 * shell.scale},0 Q${-4 * shell.scale},${-6 * shell.scale} 0,${-8 * shell.scale} Q${4 * shell.scale},${-6 * shell.scale} ${8 * shell.scale},0 Q${6 * shell.scale},${4 * shell.scale} 0,${6 * shell.scale} Q${-6 * shell.scale},${4 * shell.scale} ${-8 * shell.scale},0`}
+            fill={palette.horizon}
+            opacity="0.6"
+          />
+          <line x1={-6 * shell.scale} y1={0} x2={-2 * shell.scale} y2={-4 * shell.scale} stroke={palette.primary} strokeWidth="0.8" opacity="0.5" />
+          <line x1={0} y1={-7 * shell.scale} x2={0} y2={5 * shell.scale} stroke={palette.primary} strokeWidth="0.8" opacity="0.5" />
+          <line x1={6 * shell.scale} y1={0} x2={2 * shell.scale} y2={-4 * shell.scale} stroke={palette.primary} strokeWidth="0.8" opacity="0.5" />
+        </motion.g>
+      ))}
+
+      {/* Beach birds */}
+      {(tod === "day" || tod === "afternoon") &&
+        beachBirds.map((bird, i) => (
+          <motion.g
+            key={`beach-bird-${i}`}
+            animate={{
+              y: prefersReducedMotion ? [0, 0] : [0, -2, 0],
+              opacity: prefersReducedMotion ? [1, 1] : [0.7, 1, 0.7],
+            }}
+            transition={{
+              duration: 2 + i * 0.3,
+              ease: "easeInOut",
+              repeat: Infinity,
+            }}
+          >
+            <ellipse cx={bird.x} cy={viewH * 0.74} rx={6 * bird.scale} ry={3 * bird.scale} fill="#333" />
+            <motion.polygon
+              points={`${bird.x},${viewH * 0.735} ${bird.x - 5 * bird.scale},${viewH * 0.745} ${bird.x + 5 * bird.scale},${viewH * 0.745}`}
+              fill="#333"
+              animate={{
+                points: prefersReducedMotion
+                  ? [`${bird.x},${viewH * 0.735} ${bird.x - 5 * bird.scale},${viewH * 0.745} ${bird.x + 5 * bird.scale},${viewH * 0.745}`]
+                  : [
+                      `${bird.x},${viewH * 0.735} ${bird.x - 5 * bird.scale},${viewH * 0.745} ${bird.x + 5 * bird.scale},${viewH * 0.745}`,
+                      `${bird.x},${viewH * 0.73} ${bird.x - 5 * bird.scale},${viewH * 0.74} ${bird.x + 5 * bird.scale},${viewH * 0.74}`,
+                      `${bird.x},${viewH * 0.735} ${bird.x - 5 * bird.scale},${viewH * 0.745} ${bird.x + 5 * bird.scale},${viewH * 0.745}`,
+                    ],
+              }}
+              transition={{
+                duration: 0.8,
+                ease: "easeInOut",
+                repeat: Infinity,
+              }}
+            />
+          </motion.g>
+        ))}
+
+      {/* h d={`M0,${viewH * 0.72} Q${viewW * 0.5},${viewH * 0.70} ${viewW},${viewH * 0.72} L${viewW},${viewH} L0,${viewH} Z`} fill={palette.ground} />
 
       {/* Palm trees */}
       {palms.map((palm, i) => (

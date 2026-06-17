@@ -3,57 +3,59 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Shuffle, Download, ChevronDown, ChevronUp, Sun, Sunset, Moon, Sunrise } from "lucide-react";
-import { getTimeOfDay, type TimeOfDay } from "@/lib/timeUtils";
+import { type TimeOfDay } from "@/lib/timeUtils";
+import { getSecondaryTextColorForPalette } from "@/lib/colorUtils";
 import { PresetButton } from "@/components/PresetButton";
 import { getAllThemes, type ThemeName } from "@/lib/themes";
+import { PaletteConfig } from "@/lib/themes/themeTypes";
+import { COLOR_PALETTE } from "@/lib/colorPalette";
 
 interface ControlsProps {
-  /** Controlled time override. null = use live system time */
-  overrideTime: Date | null;
-  onTimeChange: (date: Date | null) => void;
+  /** Visual time override for backgrounds (independent of displayed time) */
+  visualTimeOverride: TimeOfDay | null;
+  onVisualTimeChange: (tod: TimeOfDay | null) => void;
   onSaveScenery: () => void;
   onSaveLoading?: boolean;
   onSaveError?: string | null;
   onRandomizeScenery: () => void;
+  onRandomizeAll?: () => void;
   darkModeEnabled: boolean;
   onToggleDarkMode: () => void;
   currentTheme?: ThemeName;
   onThemeChange?: (theme: ThemeName) => void;
+  palette?: PaletteConfig;
 }
 
 export default function Controls({
-  overrideTime,
-  onTimeChange,
+  visualTimeOverride,
+  onVisualTimeChange,
   onSaveScenery,
   onSaveLoading = false,
   onSaveError,
   onRandomizeScenery,
+  onRandomizeAll,
   darkModeEnabled,
   onToggleDarkMode,
   currentTheme = "lush_lake",
   onThemeChange,
+  palette,
 }: ControlsProps) {
   const [open, setOpen] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const themes = getAllThemes();
 
-  // Determine which preset is active
-  const currentPreset: "live" | TimeOfDay = overrideTime ? getTimeOfDay(overrideTime) : "live";
+  // Determine which preset is active (based on visual override, not actual time)
+  const currentPreset: "live" | TimeOfDay = visualTimeOverride ?? "live";
+
+  // Compute text colors based on palette
+  const secondaryText = palette ? getSecondaryTextColorForPalette(palette.sky) : "#e0e0e0";
 
   const setPreset = (p: "live" | TimeOfDay) => {
     if (p === "live") {
-      onTimeChange(null);
+      onVisualTimeChange(null);
       return;
     }
-    const d = new Date();
-    const hours: Record<TimeOfDay, number> = {
-      day: 9,
-      afternoon: 14,
-      evening: 18,
-      night: 22,
-    };
-    d.setHours(hours[p], 0, 0, 0);
-    onTimeChange(d);
+    onVisualTimeChange(p);
   };
 
   return (
@@ -75,16 +77,20 @@ export default function Controls({
       >
         {/* ── Toggle header ──────────────────────────────────────── */}
         <button
-          className="flex w-full items-center justify-between px-6 py-3.5 text-white/70 hover:text-white transition-colors duration-200 cursor-pointer"
+          className="flex w-full items-center justify-between px-6 py-3.5 transition-colors duration-200 cursor-pointer"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label="Toggle scene controls"
+          style={{
+            color: `${secondaryText}b3`,
+            textShadow: "0 1px 4px rgba(0,0,0,0.1)",
+          }}
         >
           <div className="flex items-center gap-2">
             <Clock size={14} />
             <span className="text-xs font-medium tracking-widest uppercase">Scene Controls</span>
           </div>
-          <span className="text-white/70">
+          <span>
             {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </span>
         </button>
@@ -105,9 +111,10 @@ export default function Controls({
 
                 {/* Preset time selector — responsive grid */}
                 <div className="flex flex-col gap-2">
-                  <span className="text-white/50 text-xs tracking-widest uppercase">Time Preset</span>
+                  <span className="text-xs tracking-widest uppercase" style={{ color: `${secondaryText}80` }}>Time Preset</span>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     <PresetButton
+                      preset="live"
                       icon={<Clock size={14} />}
                       label="Live"
                       isActive={currentPreset === "live"}
@@ -115,6 +122,7 @@ export default function Controls({
                       ariaLabel="Use live system time"
                     />
                     <PresetButton
+                      preset="day"
                       icon={<Sun size={14} />}
                       label="Day"
                       isActive={currentPreset === "day"}
@@ -122,6 +130,7 @@ export default function Controls({
                       ariaLabel="Set to daytime"
                     />
                     <PresetButton
+                      preset="afternoon"
                       icon={<Sunrise size={14} />}
                       label="Afternoon"
                       isActive={currentPreset === "afternoon"}
@@ -129,6 +138,7 @@ export default function Controls({
                       ariaLabel="Set to afternoon"
                     />
                     <PresetButton
+                      preset="evening"
                       icon={<Sunset size={14} />}
                       label="Evening"
                       isActive={currentPreset === "evening"}
@@ -136,6 +146,7 @@ export default function Controls({
                       ariaLabel="Set to evening"
                     />
                     <PresetButton
+                      preset="night"
                       icon={<Moon size={14} />}
                       label="Night"
                       isActive={currentPreset === "night"}
@@ -143,14 +154,11 @@ export default function Controls({
                       ariaLabel="Set to night"
                     />
                   </div>
-                  {overrideTime && (
-                    <p className="text-white/40 text-xs">Previewing a preset time — live clock paused.</p>
-                  )}
                 </div>
 
                 {/* Dark Mode toggle */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-white/50 text-xs tracking-widest uppercase">Dark Mode</span>
+                  <span className="text-xs tracking-widest uppercase" style={{ color: `${secondaryText}80` }}>Dark Mode</span>
                   <button
                     onClick={onToggleDarkMode}
                     className={`min-w-[96px] flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 sm:py-2 text-xs font-medium border transition-all duration-200 cursor-pointer min-h-12 sm:min-h-10 ${
@@ -168,10 +176,11 @@ export default function Controls({
                 {/* Theme selector */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-white/50 text-xs tracking-widest uppercase">Scene Theme</span>
+                    <span className="text-xs tracking-widest uppercase" style={{ color: `${secondaryText}80` }}>Scene Theme</span>
                     <button
                       onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-                      className="text-white/70 hover:text-white transition-colors"
+                      className="transition-colors"
+                      style={{ color: `${secondaryText}b3` }}
                       aria-label="Toggle theme menu"
                       aria-expanded={themeMenuOpen}
                     >
@@ -221,7 +230,25 @@ export default function Controls({
                     <span className="hidden sm:inline">Randomize Scenery</span>
                     <span className="sm:hidden">Randomize</span>
                   </button>
+{onRandomizeAll && (
+                    <button
+                      onClick={onRandomizeAll}
+                      disabled={onSaveLoading}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 sm:py-2.5 text-xs font-medium tracking-wide transition-all duration-300 ease-out cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-12 sm:min-h-10"
+                      style={{
+                        background: `linear-gradient(135deg, ${COLOR_PALETTE.neon.purple}25, ${COLOR_PALETTE.neon.magenta}25)`,
+                        border: `2px solid ${COLOR_PALETTE.neon.magenta}60`,
+                        color: COLOR_PALETTE.neon.magenta,
+                      }}
+                      aria-label="Randomize everything including theme"
+                    >
+                      <Shuffle size={14} />
+                      <span className="hidden sm:inline">Randomize All</span>
+                      <span className="sm:hidden">All</span>
+                    </button>
+                  )}
 
+                  
                   <button
                     onClick={onSaveScenery}
                     disabled={onSaveLoading}

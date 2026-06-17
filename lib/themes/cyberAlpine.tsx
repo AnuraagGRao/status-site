@@ -36,7 +36,14 @@ const CYBER_ALPINE_PALETTES: ThemePalettes = {
     ground: "#050505",
     primary: "#1A0D26",
     secondary: "#0D1B2A",
-  },
+    amoled: {
+      sky: ["#000000", "#0a0a1a"],
+      horizon: "#000000",
+      ground: "#000000",
+      primary: "#00ffff",
+      secondary: "#ff00ff",
+    },
+  }
 };
 
 interface DataStream {
@@ -60,10 +67,37 @@ function generateDataStreams(seed: number, viewW: number, viewH: number): DataSt
   return streams;
 }
 
+interface NeonBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  color: string;
+}
+
+function generateNeonBoxes(seed: number, viewW: number, viewH: number): NeonBox[] {
+  const rng = makePRNG(seed);
+  const colors = ["#00ffff", "#ff00ff", "#00ff00", "#ffff00"];
+  const boxes: NeonBox[] = [];
+
+  for (let i = 0; i < 5; i++) {
+    boxes.push({
+      x: rng() * (viewW * 0.7),
+      y: rng() * (viewH * 0.4) + viewH * 0.1,
+      w: rng() * 60 + 30,
+      h: rng() * 40 + 20,
+      color: colors[Math.floor(rng() * colors.length)],
+    });
+  }
+
+  return boxes;
+}
+
 function CyberAlpineTheme(props: ThemeComponentProps) {
   const { tod, palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
 
   const dataStreams = generateDataStreams(variantSeed, viewW, viewH);
+  const neonBoxes = generateNeonBoxes(variantSeed + 1, viewW, viewH);
   const parallaxDuration = prefersReducedMotion ? 0.1 : 30;
   const gridDuration = prefersReducedMotion ? 0.1 : 8;
   const streamDuration = prefersReducedMotion ? 0.1 : 3;
@@ -138,6 +172,48 @@ function CyberAlpineTheme(props: ThemeComponentProps) {
               repeatDelay: 2,
             }}
             filter="url(#cyberGlow)"
+          />
+        </motion.g>
+      ))}
+
+      {/* Neon boxes (geometric elements) */}
+      {neonBoxes.map((box, i) => (
+        <motion.g key={`neon-box-${i}`}>
+          <motion.rect
+            x={box.x}
+            y={box.y}
+            width={box.w}
+            height={box.h}
+            fill="none"
+            stroke={box.color}
+            strokeWidth="2"
+            animate={{
+              opacity: prefersReducedMotion ? [0.7, 0.7] : [0.4, 0.8, 0.4],
+              boxShadow: prefersReducedMotion ? ["0 0 0px rgba(0,0,0,0)"] : ["0 0 8px rgba(0,0,0,0)", `0 0 16px ${box.color}`, "0 0 8px rgba(0,0,0,0)"],
+            }}
+            transition={{
+              opacity: { duration: 3 + i * 0.3, ease: "easeInOut", repeat: Infinity },
+              boxShadow: { duration: 2.5 + i * 0.2, ease: "easeInOut", repeat: Infinity },
+            }}
+            filter="url(#cyberGlow)"
+          />
+          <motion.rect
+            x={box.x + 4}
+            y={box.y + 4}
+            width={box.w - 8}
+            height={box.h - 8}
+            fill="none"
+            stroke={box.color}
+            strokeWidth="1"
+            opacity="0.3"
+            animate={{
+              scale: prefersReducedMotion ? [1, 1] : [1, 1.05, 1],
+            }}
+            transition={{
+              duration: 2 + i * 0.25,
+              ease: "easeInOut",
+              repeat: Infinity,
+            }}
           />
         </motion.g>
       ))}

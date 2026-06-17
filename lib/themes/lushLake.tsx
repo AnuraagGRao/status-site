@@ -127,6 +127,75 @@ function generateTrees(seed: number, viewW: number): Tree[] {
   return trees;
 }
 
+// ── Bush generator ──────────────────────────────────────────────────
+interface Bush {
+  x: number;
+  scale: number;
+}
+
+function generateBushes(seed: number, viewW: number): Bush[] {
+  const rng = makePRNG(seed);
+  const bushes: Bush[] = [];
+  const bushCount = 25;
+
+  for (let i = 0; i < bushCount; i++) {
+    bushes.push({
+      x: rng() * viewW * 1.2 - viewW * 0.1,
+      scale: rng() * 0.5 + 0.6,
+    });
+  }
+
+  return bushes;
+}
+
+// ── Rock generator ──────────────────────────────────────────────────
+interface Rock {
+  x: number;
+  size: number;
+}
+
+function generateRocks(seed: number, viewW: number): Rock[] {
+  const rng = makePRNG(seed);
+  const rocks: Rock[] = [];
+  const rockCount = 18;
+
+  for (let i = 0; i < rockCount; i++) {
+    rocks.push({
+      x: rng() * viewW * 1.1 - viewW * 0.05,
+      size: rng() * 12 + 6,
+    });
+  }
+
+  return rocks;
+}
+
+// ── Bird generator ──────────────────────────────────────────────────
+interface Bird {
+  id: number;
+  startX: number;
+  y: number;
+  speed: number;
+  scale: number;
+}
+
+function generateBirds(seed: number, viewW: number): Bird[] {
+  const rng = makePRNG(seed);
+  const birds: Bird[] = [];
+  const birdCount = 6;
+
+  for (let i = 0; i < birdCount; i++) {
+    birds.push({
+      id: i,
+      startX: -100 + rng() * (viewW + 200),
+      y: rng() * 0.4 + 0.1,
+      speed: rng() * 80 + 60,
+      scale: rng() * 0.3 + 0.7,
+    });
+  }
+
+  return birds;
+}
+
 // ── Component ────────────────────────────────────────────────────────
 function LushLakeTheme(props: ThemeComponentProps) {
   const { tod, palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
@@ -134,6 +203,9 @@ function LushLakeTheme(props: ThemeComponentProps) {
   const GEN_CLOUDS = generateClouds(variantSeed);
   const GEN_TREES = generateTrees(variantSeed, viewW);
   const GEN_STARS = generateStars(variantSeed);
+  const GEN_BUSHES = generateBushes(variantSeed + 1, viewW);
+  const GEN_ROCKS = generateRocks(variantSeed + 2, viewW);
+  const GEN_BIRDS = generateBirds(variantSeed + 3, viewW);
 
   const cloudDuration = prefersReducedMotion ? 0.1 : 6;
   const parallaxDuration = prefersReducedMotion ? 0.1 : 20;
@@ -292,6 +364,118 @@ function LushLakeTheme(props: ThemeComponentProps) {
                 opacity={cloud.opacity}
               />
             ))}
+          </motion.g>
+        ))}
+
+      {/* Rocks */}
+      {GEN_ROCKS.map((rock, i) => (
+        <motion.g key={`rock-${i}`} animate={{ y: prefersReducedMotion ? [0, 0] : [0, 3, 0] }} transition={{ duration: 4 + i * 0.3, ease: "easeInOut", repeat: Infinity }}>
+          <ellipse cx={rock.x} cy={viewH * 0.89 + rock.size * 0.3} rx={rock.size} ry={rock.size * 0.4} fill="#555" opacity="0.7" />
+          <motion.ellipse cx={rock.x} cy={viewH * 0.89} rx={rock.size * 0.9} ry={rock.size * 0.35} fill="#666" opacity="0.8" animate={{ opacity: prefersReducedMotion ? [0.8, 0.8] : [0.7, 0.9, 0.7] }} transition={{ duration: 3.5 + i * 0.2, ease: "easeInOut", repeat: Infinity }} />
+        </motion.g>
+      ))}
+
+      {/* Bushes */}
+      {GEN_BUSHES.map((bush, i) => {
+        const bushY = viewH * 0.87;
+        const bushScale = bush.scale;
+        return (
+          <motion.g key={`bush-${i}`} animate={{ y: prefersReducedMotion ? [0, 0] : [0, 2, 0], scale: prefersReducedMotion ? [1, 1] : [1, 1.05, 1] }} transition={{ duration: 3 + i * 0.25, ease: "easeInOut", repeat: Infinity }}>
+            <circle cx={bush.x - 12 * bushScale} cy={bushY} r={14 * bushScale} fill={palette.primary} opacity="0.9" />
+            <circle cx={bush.x} cy={bushY - 8 * bushScale} r={16 * bushScale} fill={palette.primary} />
+            <circle cx={bush.x + 12 * bushScale} cy={bushY} r={14 * bushScale} fill={palette.primary} opacity="0.9" />
+            <ellipse cx={bush.x} cy={bushY + 10 * bushScale} rx={20 * bushScale} ry={4 * bushScale} fill="rgba(0,0,0,0.1)" />
+          </motion.g>
+        );
+      })}
+
+      {/* Birds (day/afternoon only) */}
+      {(tod === "day" || tod === "afternoon") &&
+        GEN_BIRDS.map((bird) => (
+          <motion.g
+            key={`bird-${bird.id}`}
+            style={{ willChange: "transform" }}
+            animate={{
+              x: prefersReducedMotion ? [bird.startX, bird.startX] : [bird.startX, bird.startX + viewW + 200],
+              y: prefersReducedMotion ? [0, 0] : [0, -4, 0],
+            }}
+            transition={{
+              x: {
+                duration: prefersReducedMotion ? 0.1 : (viewW + 200) / bird.speed,
+                ease: "linear",
+                repeat: Infinity,
+                repeatType: "loop",
+              },
+              y: {
+                duration: 1.5,
+                ease: "easeInOut",
+                repeat: Infinity,
+              },
+            }}
+          >
+            {/* Bird body - more bird-like shape */}
+            <ellipse cx={0} cy={bird.y * viewH} rx={6 * bird.scale} ry={3 * bird.scale} fill="#3a3a3a" />
+            {/* Bird head */}
+            <circle cx={7 * bird.scale} cy={bird.y * viewH - 1.5 * bird.scale} r={2.5 * bird.scale} fill="#2a2a2a" />
+            {/* Bird eye */}
+            <circle cx={8.5 * bird.scale} cy={bird.y * viewH - 2 * bird.scale} r={0.5 * bird.scale} fill="#fff" opacity="0.6" />
+            {/* Bird beak */}
+            <polygon
+              points={`${9.5 * bird.scale},${bird.y * viewH - 1.5 * bird.scale} ${11 * bird.scale},${bird.y * viewH - 1 * bird.scale} ${9.5 * bird.scale},${bird.y * viewH - 1 * bird.scale}`}
+              fill="#d4a574"
+            />
+            {/* Left wing - animated flapping */}
+            <motion.path
+              d={`M${-2 * bird.scale},${bird.y * viewH} Q${-10 * bird.scale},${(bird.y - 0.05) * viewH} ${-14 * bird.scale},${bird.y * viewH}`}
+              stroke="#2a2a2a"
+              strokeWidth={1.5}
+              fill="none"
+              strokeLinecap="round"
+              animate={{
+                d: prefersReducedMotion
+                  ? [`M${-2 * bird.scale},${bird.y * viewH} Q${-10 * bird.scale},${(bird.y - 0.05) * viewH} ${-14 * bird.scale},${bird.y * viewH}`]
+                  : [
+                      `M${-2 * bird.scale},${bird.y * viewH} Q${-10 * bird.scale},${(bird.y - 0.1) * viewH} ${-14 * bird.scale},${bird.y * viewH}`,
+                      `M${-2 * bird.scale},${bird.y * viewH} Q${-10 * bird.scale},${(bird.y - 0.02) * viewH} ${-14 * bird.scale},${bird.y * viewH}`,
+                      `M${-2 * bird.scale},${bird.y * viewH} Q${-10 * bird.scale},${(bird.y - 0.1) * viewH} ${-14 * bird.scale},${bird.y * viewH}`,
+                    ],
+              }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+                repeat: Infinity,
+              }}
+            />
+            {/* Right wing - animated flapping */}
+            <motion.path
+              d={`M${2 * bird.scale},${bird.y * viewH} Q${10 * bird.scale},${(bird.y - 0.05) * viewH} ${14 * bird.scale},${bird.y * viewH}`}
+              stroke="#2a2a2a"
+              strokeWidth={1.5}
+              fill="none"
+              strokeLinecap="round"
+              animate={{
+                d: prefersReducedMotion
+                  ? [`M${2 * bird.scale},${bird.y * viewH} Q${10 * bird.scale},${(bird.y - 0.05) * viewH} ${14 * bird.scale},${bird.y * viewH}`]
+                  : [
+                      `M${2 * bird.scale},${bird.y * viewH} Q${10 * bird.scale},${(bird.y - 0.1) * viewH} ${14 * bird.scale},${bird.y * viewH}`,
+                      `M${2 * bird.scale},${bird.y * viewH} Q${10 * bird.scale},${(bird.y - 0.02) * viewH} ${14 * bird.scale},${bird.y * viewH}`,
+                      `M${2 * bird.scale},${bird.y * viewH} Q${10 * bird.scale},${(bird.y - 0.1) * viewH} ${14 * bird.scale},${bird.y * viewH}`,
+                    ],
+              }}
+              transition={{
+                duration: 0.6,
+                ease: "easeInOut",
+                repeat: Infinity,
+              }}
+            />
+            {/* Bird tail */}
+            <path
+              d={`M${-6 * bird.scale},${bird.y * viewH} L${-10 * bird.scale},${(bird.y + 0.03) * viewH}`}
+              stroke="#2a2a2a"
+              strokeWidth={1}
+              fill="none"
+              strokeLinecap="round"
+            />
           </motion.g>
         ))}
 
