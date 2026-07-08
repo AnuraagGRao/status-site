@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Briefcase, Moon, Clock } from "lucide-react";
 import { StatusType } from "@/lib/timeUtils";
@@ -28,7 +28,7 @@ const AWAY_ITEMS = [
   "Sleeping lol"
 ];
 
-export default function StatusCard({ time, date, status, palette }: StatusCardProps) {
+function StatusCardComponent({ time, date, status, palette }: StatusCardProps) {
   const isWorking = status === "working";
   const items = isWorking ? WORKING_ITEMS : AWAY_ITEMS;
   
@@ -226,6 +226,9 @@ export default function StatusCard({ time, date, status, palette }: StatusCardPr
                 }}
                 className="text-sm text-center leading-relaxed font-light max-w-xs origin-center"
                 style={{ color: `${secondaryText}b3` }}
+                role="status"
+                aria-live="polite"
+                aria-label={`Currently ${isWorking ? 'working on' : 'doing'}: ${items[currentItemIndex]}`}
               >
                 {items[currentItemIndex]}
               </motion.p>
@@ -236,3 +239,7 @@ export default function StatusCard({ time, date, status, palette }: StatusCardPr
     </motion.div>
   );
 }
+
+// Memoize to prevent unnecessary re-renders when parent updates
+const StatusCard = memo(StatusCardComponent);
+export default StatusCard;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Shuffle, Download, ChevronDown, ChevronUp, Sun, Sunset, Moon, Sunrise } from "lucide-react";
 import { type TimeOfDay } from "@/lib/timeUtils";
@@ -26,7 +26,7 @@ interface ControlsProps {
   palette?: PaletteConfig;
 }
 
-export default function Controls({
+function ControlsComponent({
   visualTimeOverride,
   onVisualTimeChange,
   onSaveScenery,
@@ -275,3 +275,7 @@ export default function Controls({
     </motion.div>
   );
 }
+
+// Memoize to prevent unnecessary re-renders when parent updates
+const Controls = memo(ControlsComponent);
+export default Controls;
