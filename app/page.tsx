@@ -173,6 +173,19 @@ export default function Home() {
           onThemeChange={setTheme}
           palette={mounted ? THEME_REGISTRY[theme][tod] : undefined}
         />
+
+        {/* Back to portfolio link */}
+        <motion.a
+          href="https://anuraaggrao.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 text-xs opacity-60 hover:opacity-100 transition-opacity"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1, delay: 0.5 }}
+        >
+          ← Portfolio
+        </motion.a>
       </div>
 
       {/* ── Toast notification ───────────────────────────────────── */}
