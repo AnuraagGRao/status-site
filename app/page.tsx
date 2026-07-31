@@ -8,6 +8,8 @@ import AnimatedBackground from "@/components/AnimatedBackground";
 import StatusCard from "@/components/StatusCard";
 import Controls from "@/components/Controls";
 import Toast from "@/components/Toast";
+import VisitorCounter from "@/components/VisitorCounter";
+import KeyboardShortcuts from "@/components/KeyboardShortcuts";
 
 import {
   getStatus,
@@ -133,7 +135,7 @@ export default function Home() {
             className="font-semibold tracking-tight"
             style={{
               fontSize: "clamp(1.1rem, 3vw, 1.4rem)",
-              color: mounted ? (THEME_REGISTRY[theme][tod]?.sky ? getTextColorForPalette(THEME_REGISTRY[theme][tod].sky) : "#ffffff") : "#ffffff",
+              color: mounted ? (THEME_REGISTRY[theme].palettes[tod]?.sky ? getTextColorForPalette(THEME_REGISTRY[theme].palettes[tod].sky) : "#ffffff") : "#ffffff",
               textShadow: `0 2px 8px rgba(0,0,0,0.15)`,
             }}
           >
@@ -142,7 +144,7 @@ export default function Home() {
           <p
             className="text-xs tracking-widest uppercase mt-0.5"
             style={{
-              color: mounted ? (THEME_REGISTRY[theme][tod]?.sky ? getSecondaryTextColorForPalette(THEME_REGISTRY[theme][tod].sky) : "#ffffff") + "80" : "#ffffff80",
+              color: mounted ? (THEME_REGISTRY[theme].palettes[tod]?.sky ? getSecondaryTextColorForPalette(THEME_REGISTRY[theme].palettes[tod].sky) : "#ffffff") + "80" : "#ffffff80",
               textShadow: `0 1px 4px rgba(0,0,0,0.1)`,
             }}
           >
@@ -151,7 +153,7 @@ export default function Home() {
         </motion.div>
 
         {/* Status card */}
-        <StatusCard time={timeStr} date={dateStr} status={status} palette={mounted ? THEME_REGISTRY[theme][tod] : undefined} />
+        <StatusCard time={timeStr} date={dateStr} status={status} palette={mounted ? THEME_REGISTRY[theme].palettes[tod] : undefined} />
 
         {/* Scene controls */}
         <Controls
@@ -171,7 +173,7 @@ export default function Home() {
           onToggleDarkMode={() => setDarkMode((v) => !v)}
           currentTheme={theme}
           onThemeChange={setTheme}
-          palette={mounted ? THEME_REGISTRY[theme][tod] : undefined}
+          palette={mounted ? THEME_REGISTRY[theme].palettes[tod] : undefined}
         />
 
         {/* Back to portfolio link */}
@@ -190,6 +192,12 @@ export default function Home() {
 
       {/* ── Toast notification ───────────────────────────────────── */}
       <Toast visible={toast} message="Scenery saved!" />
+
+      {/* ── Visitor Counter ──────────────────────────────────────── */}
+      <VisitorCounter />
+
+      {/* ── Keyboard Shortcuts ───────────────────────────────────── */}
+      <KeyboardShortcuts />
     </main>
   );
 }
