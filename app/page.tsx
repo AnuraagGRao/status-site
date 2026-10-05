@@ -103,12 +103,30 @@ export default function Home() {
       })()
     : 1;
 
+  const PRESET_CYCLE: Array<TimeOfDay | null> = [null, "day", "afternoon", "evening", "night"];
+
+  const handleNextPreset = useCallback(() => {
+    setVisualTimeOverride((current) => {
+      const idx = PRESET_CYCLE.indexOf(current);
+      const nextIdx = (idx + 1) % PRESET_CYCLE.length;
+      return PRESET_CYCLE[nextIdx];
+    });
+  }, []);
+
+  const handlePrevPreset = useCallback(() => {
+    setVisualTimeOverride((current) => {
+      const idx = PRESET_CYCLE.indexOf(current);
+      const prevIdx = (idx - 1 + PRESET_CYCLE.length) % PRESET_CYCLE.length;
+      return PRESET_CYCLE[prevIdx];
+    });
+  }, []);
+
   return (
-    <main className="relative min-h-screen w-full overflow-hidden flex flex-col items-center justify-center">
+    <main className="relative min-h-screen w-full overflow-x-hidden flex flex-col items-center justify-center py-12 px-4">
       {/* ── Animated background ──────────────────────────────────── */}
       <motion.div
         key={tod}
-        className="absolute inset-0 z-0"
+        className="fixed inset-0 z-0 pointer-events-none"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1.4 }}
@@ -123,7 +141,7 @@ export default function Home() {
       </motion.div>
 
       {/* ── Content layer ────────────────────────────────────────── */}
-      <div className="relative z-10 w-full max-w-lg px-4 flex flex-col items-center gap-4">
+      <div className="relative z-10 w-full max-w-lg px-2 sm:px-4 flex flex-col items-center gap-4">
         {/* Page heading */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -193,13 +211,14 @@ export default function Home() {
           href="https://anuraaggrao.com/"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 text-[0.75rem] uppercase tracking-wider opacity-60 hover:opacity-100 transition-all px-3.5 py-1.5 rounded-full border border-white/10 hover:border-white/20 bg-black/20 backdrop-blur-sm"
+          className="group mt-3 text-[0.75rem] font-medium uppercase tracking-wider text-white/70 hover:text-white transition-all px-4 py-2 rounded-full border border-white/10 hover:border-white/25 bg-black/30 hover:bg-black/50 backdrop-blur-md shadow-sm flex items-center gap-1.5 cursor-pointer"
           style={{ fontFamily: "var(--font-mono)" }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 0.5 }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
         >
-          ← Portfolio
+          <span className="transition-transform duration-200 group-hover:-translate-x-0.5">←</span>
+          <span>Back to Portfolio</span>
         </motion.a>
       </div>
 
@@ -210,7 +229,13 @@ export default function Home() {
       <VisitorCounter />
 
       {/* ── Keyboard Shortcuts ───────────────────────────────────── */}
-      <KeyboardShortcuts />
+      <KeyboardShortcuts
+        onSaveScenery={handleSaveAction}
+        onToggleDarkMode={() => setDarkMode((v) => !v)}
+        onRandomizeScenery={() => setSceneVariant((v) => (v * 1664525 + 1013904223) >>> 0)}
+        onNextTimePreset={handleNextPreset}
+        onPrevTimePreset={handlePrevPreset}
+      />
     </main>
   );
 }

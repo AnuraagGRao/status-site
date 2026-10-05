@@ -96,13 +96,19 @@ function StatusCardComponent({ time, date, status, palette }: StatusCardProps) {
             transition={{ delay: 0.1, duration: 0.6 }}
             className="flex flex-col items-center gap-1"
           >
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1 flex-wrap justify-center">
               <Clock size={13} style={{ color: `${secondaryText}90` }} />
               <span
                 className="text-[0.7rem] font-medium tracking-[0.14em] uppercase"
                 style={{ fontFamily: "var(--font-mono)", color: `${secondaryText}90` }}
               >
                 Local Time
+              </span>
+              <span
+                className="text-[0.62rem] font-mono uppercase px-2 py-0.5 rounded-full border border-white/10 bg-white/5 tracking-wider"
+                style={{ color: `${secondaryText}99` }}
+              >
+                IST · UTC+5:30
               </span>
             </div>
             <span
@@ -185,56 +191,36 @@ function StatusCardComponent({ time, date, status, palette }: StatusCardProps) {
                 </motion.span>
               </AnimatePresence>
 
-              {/* Live dot */}
-              {isWorking && (
-                <motion.span
-                  className="w-1.5 h-1.5 rounded-full bg-emerald-400"
-                  animate={{ opacity: [1, 0.2, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                />
+              {/* Live pulsing dot */}
+              {isWorking ? (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                </span>
+              ) : (
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-400/80" />
               )}
             </motion.div>
 
-            {/* Status description */}
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={`${status}-${currentItemIndex}`}
-                initial={{
-                  opacity: 0,
-                  x: isAlternateDirection ? 14 : -14,
-                  y: isAlternateDirection ? 14 : -14,
-                  scale: 0.2,
-                  rotateZ: isAlternateDirection ? 42 : -42,
-                }}
-                animate={{
-                  opacity: [0, 0.2, 0.05, 0.4, 0.1, 0.9, 0.7, 1, 1, 1],
-                  x: isAlternateDirection ? [0, 20, -25, 15, -30, 10, -15, 5, -8, 0] : [0, -20, 25, -15, 30, -10, 15, -5, 8, 0],
-                  y: isAlternateDirection ? [0, -15, 25, -20, 18, -12, 8, -5, 2, 0] : [0, 15, -25, 20, -18, 12, -8, 5, -2, 0],
-                  scale: [0.2, 1.4, 0.6, 1.2, 0.5, 1.3, 0.8, 1.1, 1, 1],
-                  rotateZ: isAlternateDirection ? [15, -8, 8, -6, 8, -4, 3, -1, 0, 0] : [-15, 8, -8, 6, -8, 4, -3, 1, 0, 0],
-                  skewX: isAlternateDirection ? [-5, -3, 4, -2, 2, -1, 0, 0, 0, 0] : [5, 3, -4, 2, -2, 1, 0, 0, 0, 0],
-                }}
-                exit={{
-                  opacity: 0,
-                  x: isAlternateDirection ? 7 : -7,
-                  y: isAlternateDirection ? 7 : -7,
-                  scale: 0.2,
-                  rotateZ: isAlternateDirection ? 69 : -69,
-                }}
-                transition={{
-                  duration: 0.6,
-                  times: [0, 0.1, 0.2, 0.3, 0.45, 0.6, 0.75, 0.9, 0.95, 1],
-                  ease: "easeOut"
-                }}
-                className="text-sm text-center leading-relaxed font-light max-w-xs origin-center"
-                style={{ color: `${secondaryText}b3` }}
-                role="status"
-                aria-live="polite"
-                aria-label={`Currently ${isWorking ? 'working on' : 'doing'}: ${items[currentItemIndex]}`}
-              >
-                {items[currentItemIndex]}
-              </motion.p>
-            </AnimatePresence>
+            {/* Status description with smooth luxury transition */}
+            <div className="min-h-[1.5rem] flex items-center justify-center">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={`${status}-${currentItemIndex}`}
+                  initial={{ opacity: 0, y: 6, filter: "blur(3px)" }}
+                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                  exit={{ opacity: 0, y: -6, filter: "blur(3px)" }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  className="text-sm text-center leading-relaxed font-light max-w-xs origin-center"
+                  style={{ color: `${secondaryText}d9` }}
+                  role="status"
+                  aria-live="polite"
+                  aria-label={`Currently ${isWorking ? 'working on' : 'doing'}: ${items[currentItemIndex]}`}
+                >
+                  {items[currentItemIndex]}
+                </motion.p>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>

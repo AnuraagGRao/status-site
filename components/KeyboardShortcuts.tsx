@@ -17,7 +17,21 @@ const SHORTCUTS: Shortcut[] = [
   { keys: ["←", "→"], description: "Change time of day" },
 ];
 
-export default function KeyboardShortcuts() {
+interface KeyboardShortcutsProps {
+  onSaveScenery?: () => void;
+  onToggleDarkMode?: () => void;
+  onRandomizeScenery?: () => void;
+  onNextTimePreset?: () => void;
+  onPrevTimePreset?: () => void;
+}
+
+export default function KeyboardShortcuts({
+  onSaveScenery,
+  onToggleDarkMode,
+  onRandomizeScenery,
+  onNextTimePreset,
+  onPrevTimePreset,
+}: KeyboardShortcutsProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
@@ -29,29 +43,42 @@ export default function KeyboardShortcuts() {
 
       if (e.key === "?" && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
-        setIsOpen(true);
-      }
-
-      if (e.key === "Escape") {
+        setIsOpen((prev) => !prev);
+      } else if (e.key === "Escape") {
         setIsOpen(false);
+      } else if ((e.key === "s" || e.key === "S") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        onSaveScenery?.();
+      } else if ((e.key === "d" || e.key === "D") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        onToggleDarkMode?.();
+      } else if ((e.key === "r" || e.key === "R") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        onRandomizeScenery?.();
+      } else if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        onNextTimePreset?.();
+      } else if (e.key === "ArrowLeft" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        onPrevTimePreset?.();
       }
     };
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, []);
+  }, [onSaveScenery, onToggleDarkMode, onRandomizeScenery, onNextTimePreset, onPrevTimePreset]);
 
   return (
     <>
       {/* Help button */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-10 h-10 flex items-center justify-center bg-black/30 backdrop-blur-md border border-white/10 rounded-full hover:bg-black/40 transition-colors"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-black/40 backdrop-blur-md border border-white/10 rounded-full hover:bg-black/60 transition-colors shadow-lg cursor-pointer"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Show keyboard shortcuts"
       >
-        <span className="text-white/80 font-bold">?</span>
+        <span className="text-white/80 font-mono text-sm font-semibold">?</span>
       </motion.button>
 
       {/* Modal */}

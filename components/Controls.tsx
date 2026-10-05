@@ -77,7 +77,7 @@ function ControlsComponent({
       >
         {/* ── Toggle header ──────────────────────────────────────── */}
         <button
-          className="flex w-full items-center justify-between px-6 py-3.5 transition-colors duration-200 cursor-pointer"
+          className="flex w-full items-center justify-between px-6 py-3.5 transition-colors duration-200 cursor-pointer group hover:bg-white/5"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-label="Toggle scene controls"
@@ -87,10 +87,11 @@ function ControlsComponent({
           }}
         >
           <div className="flex items-center gap-2">
-            <Clock size={14} />
-            <span className="text-xs font-medium tracking-widest uppercase">Scene Controls</span>
+            <Clock size={14} className="group-hover:text-white transition-colors" />
+            <span className="text-xs font-medium tracking-widest uppercase group-hover:text-white transition-colors">Scene Controls</span>
           </div>
-          <span>
+          <span className="text-xs font-mono uppercase tracking-wider text-white/50 group-hover:text-white/90 transition-colors flex items-center gap-1.5">
+            <span>{open ? "Close" : "Customize"}</span>
             {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </span>
         </button>
@@ -179,7 +180,7 @@ function ControlsComponent({
                     <span className="text-xs tracking-widest uppercase" style={{ color: `${secondaryText}80` }}>Scene Theme</span>
                     <button
                       onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-                      className="transition-colors"
+                      className="transition-colors cursor-pointer"
                       style={{ color: `${secondaryText}b3` }}
                       aria-label="Toggle theme menu"
                       aria-expanded={themeMenuOpen}
@@ -197,24 +198,41 @@ function ControlsComponent({
                         transition={{ duration: 0.2 }}
                         className="space-y-1.5"
                       >
-                        {themes.map((t) => (
-                          <button
-                            key={t.id}
-                            onClick={() => {
-                              onThemeChange?.(t.id);
-                              setThemeMenuOpen(false);
-                            }}
-                            className={`w-full text-left px-3 py-2 rounded text-xs transition-all ${
-                              currentTheme === t.id
-                                ? "bg-white/25 text-white border border-white/30"
-                                : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/10"
-                            }`}
-                            aria-current={currentTheme === t.id ? "true" : "false"}
-                          >
-                            <div className="font-medium">{t.name}</div>
-                            <div className="text-xs text-white/50 truncate">{t.description}</div>
-                          </button>
-                        ))}
+                        {themes.map((t) => {
+                          const isSelected = currentTheme === t.id;
+                          const todKey = visualTimeOverride ?? "afternoon";
+                          const palettePreview = t.palettes?.[todKey] ?? t.palettes?.day;
+                          return (
+                            <button
+                              key={t.id}
+                              onClick={() => {
+                                onThemeChange?.(t.id);
+                                setThemeMenuOpen(false);
+                              }}
+                              className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all cursor-pointer ${
+                                isSelected
+                                  ? "bg-white/20 text-white border border-white/30 shadow-sm"
+                                  : "bg-white/5 text-white/70 hover:bg-white/10 hover:text-white border border-white/10"
+                              }`}
+                              aria-current={isSelected ? "true" : "false"}
+                            >
+                              <div className="flex flex-col text-left">
+                                <div className="font-medium flex items-center gap-1.5">
+                                  {t.name}
+                                  {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />}
+                                </div>
+                                <div className="text-[0.7rem] text-white/50 truncate max-w-[190px]">{t.description}</div>
+                              </div>
+                              {palettePreview && (
+                                <div className="flex items-center gap-1.5 ml-2 shrink-0">
+                                  <span className="w-2.5 h-2.5 rounded-full border border-white/20 shadow-xs" style={{ backgroundColor: palettePreview.sky[0] }} />
+                                  <span className="w-2.5 h-2.5 rounded-full border border-white/20 shadow-xs" style={{ backgroundColor: palettePreview.primary }} />
+                                  <span className="w-2.5 h-2.5 rounded-full border border-white/20 shadow-xs" style={{ backgroundColor: palettePreview.ground }} />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
                       </motion.div>
                     )}
                   </AnimatePresence>

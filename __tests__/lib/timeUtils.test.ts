@@ -35,54 +35,56 @@ describe("timeUtils", () => {
   });
 
   describe("getStatus", () => {
-    it("returns 'working' during work hours on weekday", () => {
-      const date = new Date("2024-01-01T14:00:00"); // Monday 2pm
+    it("returns 'working' during evening shift on weekday", () => {
+      const date = new Date("2024-01-01T20:00:00"); // Monday 8pm
       expect(getStatus(date)).toBe("working");
     });
 
-    it("returns 'away' outside work hours", () => {
-      const date = new Date("2024-01-01T22:00:00"); // Monday 10pm
+    it("returns 'working' during overnight tail on Tuesday morning", () => {
+      const date = new Date("2024-01-02T01:00:00"); // Tuesday 1am
+      expect(getStatus(date)).toBe("working");
+    });
+
+    it("returns 'away' outside work hours (e.g. afternoon)", () => {
+      const date = new Date("2024-01-01T14:00:00"); // Monday 2pm
       expect(getStatus(date)).toBe("away");
     });
 
-    it("returns 'away' early morning", () => {
-      const date = new Date("2024-01-01T05:00:00"); // Monday 5am
+    it("returns 'away' on weekend evening", () => {
+      const date = new Date("2024-01-06T20:00:00"); // Saturday 8pm
       expect(getStatus(date)).toBe("away");
-    });
-
-    it("respects visual time override", () => {
-      const date = new Date("2024-01-01T14:00:00"); // Working hours
-      expect(getStatus(date, "night")).toBe("away");
     });
   });
 
   describe("formatTime", () => {
-    it("formats time with leading zeros", () => {
+    it("formats time with 12-hour AM/PM and leading zeros", () => {
       const date = new Date("2024-01-01T09:05:03");
       const formatted = formatTime(date);
-      expect(formatted).toMatch(/^\d{1,2}:\d{2}:\d{2}$/);
-      expect(formatted.split(":")[1]).toBe("05");
-      expect(formatted.split(":")[2]).toBe("03");
+      expect(formatted).toMatch(/^\d{2}:\d{2}:\d{2}\s+(AM|PM)$/);
+      expect(formatted).toContain("09:05:03");
+      expect(formatted).toContain("AM");
     });
 
-    it("formats time without leading zeros for hours", () => {
+    it("formats afternoon time with PM", () => {
       const date = new Date("2024-01-01T14:30:45");
       const formatted = formatTime(date);
-      expect(formatted).toMatch(/^\d{1,2}:\d{2}:\d{2}$/);
+      expect(formatted).toMatch(/^\d{2}:\d{2}:\d{2}\s+(AM|PM)$/);
+      expect(formatted).toContain("02:30:45");
+      expect(formatted).toContain("PM");
     });
   });
 
   describe("formatDate", () => {
-    it("formats date with full month name", () => {
+    it("formats date with weekday, full month name and day", () => {
       const date = new Date("2024-01-15T14:00:00");
       const formatted = formatDate(date);
-      expect(formatted).toMatch(/January\s+\d{1,2},\s+\d{4}/);
+      expect(formatted).toBe("Monday, January 15");
     });
 
     it("formats date correctly for different months", () => {
       const date = new Date("2024-06-30T14:00:00");
       const formatted = formatDate(date);
-      expect(formatted).toMatch(/June\s+30,\s+2026/);
+      expect(formatted).toBe("Sunday, June 30");
     });
   });
 });

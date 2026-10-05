@@ -31,9 +31,9 @@ export default function VisitorCounter() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: isVisible ? 1 : 0, y: isVisible ? 0 : 20 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="fixed bottom-6 left-6 z-50"
+      className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-40 select-none"
     >
-      <div className="flex items-center gap-2 px-4 py-2 bg-black/30 backdrop-blur-md border border-white/10 rounded-lg">
+      <div className="flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 bg-black/40 backdrop-blur-md border border-white/10 rounded-full shadow-lg">
         <span className="text-xs text-white/60 font-medium">VISITORS</span>
         <div className="flex gap-1">
           {digits.map((digit, index) => (

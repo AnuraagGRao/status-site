@@ -34,6 +34,7 @@ export function getAllThemes() {
     id: theme.id,
     name: theme.name,
     description: theme.description,
+    palettes: theme.palettes,
   }));
 }
 
