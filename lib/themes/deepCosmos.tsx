@@ -1,52 +1,52 @@
 import { motion } from "framer-motion";
 import { ThemeDefinition, ThemePalettes, ThemeComponentProps } from "./themeTypes";
-
-function makePRNG(seed: number) {
-  return function () {
-    seed = (seed * 1103515245 + 12345) >>> 0;
-    return (seed / 2147483648) % 1;
-  };
-}
+import {
+  makePRNG,
+  rngRange,
+  rngInt,
+  Point2D,
+} from "@/lib/procedural";
 
 const DEEP_COSMOS_PALETTES: ThemePalettes = {
   day: {
-    sky: ["#1a0033", "#330066"],
-    horizon: "#4d0099",
-    ground: "#220055",
-    primary: "#6600cc",
-    secondary: "#9933ff",
+    sky: ["#0f172a", "#312e81"],
+    horizon: "#4338ca",
+    ground: "#1e1b4b",
+    primary: "#6366f1",
+    secondary: "#a855f7",
   },
   afternoon: {
-    sky: ["#330066", "#660099"],
-    horizon: "#9933ff",
-    ground: "#440088",
-    primary: "#7722dd",
-    secondary: "#bb44ff",
+    sky: ["#18022e", "#4a044e"],
+    horizon: "#701a75",
+    ground: "#2e1065",
+    primary: "#a21caf",
+    secondary: "#ec4899",
   },
   evening: {
-    sky: ["#440088", "#660099"],
-    horizon: "#9933ff",
-    ground: "#330066",
-    primary: "#6600cc",
-    secondary: "#ff33cc",
+    sky: ["#030712", "#1e1b4b"],
+    horizon: "#3730a3",
+    ground: "#0f172a",
+    primary: "#818cf8",
+    secondary: "#c084fc",
   },
   night: {
-    sky: ["#0a0a15", "#1a0033"],
-    horizon: "#0d001a",
-    ground: "#050510",
-    primary: "#330066",
-    secondary: "#1a0033",
+    sky: ["#030206", "#09090b"],
+    horizon: "#18181b",
+    ground: "#050508",
+    primary: "#a855f7",
+    secondary: "#06b6d4",
     amoled: {
-      sky: ["#000000", "#0d0015"],
-      horizon: "#1a0033",
+      sky: ["#000000", "#030206"],
+      horizon: "#050508",
       ground: "#000000",
-      primary: "#ff00ff",
-      secondary: "#00ffff",
+      primary: "#ec4899",
+      secondary: "#00f0ff",
     },
-  }
+  },
 };
 
 interface Star {
+  id: number;
   x: number;
   y: number;
   r: number;
@@ -55,66 +55,144 @@ interface Star {
   delay: number;
 }
 
-interface Nebula {
-  cx: string;
-  cy: string;
-  r: number;
-  color: string;
-  duration: number;
+interface ConstellationLink {
+  from: Point2D;
+  to: Point2D;
 }
 
-function generateStars(seed: number): Star[] {
-  const rng = makePRNG(seed);
+interface NebulaCloud {
+  cx: number;
+  cy: number;
+  rx: number;
+  ry: number;
+  color: string;
+  opacity: number;
+  rotate: number;
+}
+
+interface CompanionMoon {
+  cx: number;
+  cy: number;
+  r: number;
+  color: string;
+}
+
+interface Comet {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  duration: number;
+  delay: number;
+}
+
+function generateStarfield(
+  rng: () => number,
+  viewW: number,
+  viewH: number
+): { stars: Star[]; constellations: ConstellationLink[] } {
   const stars: Star[] = [];
-  const starCount = 100;
+  const starColors = ["#ffffff", "#e0e7ff", "#fef08a", "#67e8f9", "#f472b6"];
 
-  const colors = ["#FF00FF", "#00FFFF", "#00FF00", "#FFFF00", "#FF0080", "#00FF80"];
-
-  for (let i = 0; i < starCount; i++) {
+  for (let i = 0; i < 140; i++) {
     stars.push({
-      x: rng() * 100,
-      y: rng() * 100,
-      r: rng() * 1.2 + 0.3,
-      color: colors[Math.floor(rng() * colors.length)],
-      duration: rng() * 3 + 2,
-      delay: rng() * 5,
+      id: i,
+      x: rngRange(rng, 10, viewW - 10),
+      y: rngRange(rng, 10, viewH - 10),
+      r: rngRange(rng, 0.6, 2.4),
+      color: starColors[Math.floor(rng() * starColors.length)],
+      duration: rngRange(rng, 2, 5),
+      delay: rngRange(rng, 0, 4),
     });
   }
 
-  return stars;
+  // Constellations connecting nearby bright stars
+  const constellations: ConstellationLink[] = [];
+  for (let i = 0; i < 6; i++) {
+    const s1 = stars[rngInt(rng, 0, 35)];
+    const s2 = stars[rngInt(rng, 0, 35)];
+    const dist = Math.hypot(s1.x - s2.x, s1.y - s2.y);
+    if (dist > 40 && dist < 180) {
+      constellations.push({
+        from: { x: s1.x, y: s1.y },
+        to: { x: s2.x, y: s2.y },
+      });
+    }
+  }
+
+  return { stars, constellations };
 }
 
-function generateNebulae(seed: number): Nebula[] {
-  const rng = makePRNG(seed);
+function generateNebulae(rng: () => number, viewW: number, viewH: number, primary: string, secondary: string): NebulaCloud[] {
+  const nebulae: NebulaCloud[] = [];
+  const colors = [primary, secondary, "#8b5cf6", "#06b6d4", "#ec4899", "#3b82f6"];
 
-  const nebulaNoise = [
-    { color: "#FF00FF", cx: "25%", cy: "20%" },
-    { color: "#00FFFF", cx: "75%", cy: "30%" },
-    { color: "#FF00AA", cx: "15%", cy: "50%" },
-    { color: "#00FF55", cx: "85%", cy: "45%" },
-    { color: "#FF00FF", cx: "50%", cy: "65%" },
-    { color: "#00FFFF", cx: "35%", cy: "75%" },
-    { color: "#FF00AA", cx: "70%", cy: "70%" },
-  ];
+  for (let i = 0; i < 7; i++) {
+    nebulae.push({
+      cx: rngRange(rng, viewW * 0.15, viewW * 0.85),
+      cy: rngRange(rng, viewH * 0.15, viewH * 0.85),
+      rx: rngRange(rng, 220, 380),
+      ry: rngRange(rng, 140, 260),
+      color: colors[i % colors.length],
+      opacity: rngRange(rng, 0.12, 0.25),
+      rotate: rngRange(rng, -45, 45),
+    });
+  }
 
-  return nebulaNoise.map((n) => ({
-    ...n,
-    r: 150,
-    duration: rng() * 8 + 6,
-  }));
+  return nebulae;
+}
+
+function generateComets(rng: () => number, viewW: number, viewH: number): Comet[] {
+  const comets: Comet[] = [];
+  for (let i = 0; i < 2; i++) {
+    const x1 = rngRange(rng, viewW * 0.3, viewW * 0.85);
+    const y1 = rngRange(rng, viewH * 0.05, viewH * 0.35);
+    comets.push({
+      x1,
+      y1,
+      x2: x1 - rngRange(rng, 160, 260),
+      y2: y1 + rngRange(rng, 90, 160),
+      duration: rngRange(rng, 1.4, 2.2),
+      delay: rngRange(rng, 3, 9),
+    });
+  }
+  return comets;
 }
 
 function DeepCosmosTheme(props: ThemeComponentProps) {
   const { palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
 
-  const stars = generateStars(variantSeed);
-  const nebulae = generateNebulae(variantSeed + 1);
-  const parallaxDuration = prefersReducedMotion ? 0.1 : 40;
-  const nebulaDuration = prefersReducedMotion ? 0.1 : 15;
+  const rng = makePRNG(variantSeed);
 
-  const planetX = viewW * 0.6;
-  const planetY = viewH * 0.72;
-  const planetR = 90;
+  // 1. Procedural Celestial & Deep Space Elements
+  const { stars, constellations } = generateStarfield(rng, viewW, viewH);
+  const nebulae = generateNebulae(rng, viewW, viewH, palette.primary, palette.secondary);
+  const comets = generateComets(rng, viewW, viewH);
+
+  // 2. Planet & Ring Geometry
+  const planetX = viewW * (0.65 + (variantSeed % 12) * 0.012);
+  const planetY = viewH * 0.62;
+  const planetR = 105;
+
+  // Companion Moons
+  const moons: CompanionMoon[] = [
+    {
+      cx: planetX - planetR * 1.8,
+      cy: planetY - planetR * 1.2,
+      r: 22,
+      color: "#94a3b8",
+    },
+    {
+      cx: planetX + planetR * 2.1,
+      cy: planetY + planetR * 0.6,
+      r: 14,
+      color: "#cbd5e1",
+    },
+  ];
+
+  const ringTilt = -24; // Degrees
+  const ringRadiusX = 220;
+  const ringRadiusY = 55;
 
   return (
     <motion.svg
@@ -124,222 +202,196 @@ function DeepCosmosTheme(props: ThemeComponentProps) {
       aria-hidden="true"
     >
       <defs>
-        <motion.linearGradient id="cosmosSkyGrad" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+        <motion.linearGradient id="deepSkyGrad" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
           <stop offset="0%" stopColor={palette.sky[0]} />
-          <stop offset="100%" stopColor={palette.sky[1]} />
+          <stop offset="60%" stopColor={palette.sky[1]} />
+          <stop offset="100%" stopColor={palette.horizon} />
         </motion.linearGradient>
 
-        {/* Nebula blur filters */}
-        <filter id="nebulaBlur">
-          <feGaussianBlur stdDeviation="20" result="blur" />
-          <feComponentTransfer>
-            <feFuncA type="linear" slope="0.6" />
-          </feComponentTransfer>
-        </filter>
+        <radialGradient id="planetSurface" cx="35%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#c084fc" />
+          <stop offset="45%" stopColor={palette.primary} />
+          <stop offset="85%" stopColor="#1e1b4b" />
+          <stop offset="100%" stopColor="#030206" />
+        </radialGradient>
 
-        {/* Star glow */}
-        <filter id="starGlow">
-          <feGaussianBlur stdDeviation="1.5" result="blur" />
+        <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={palette.secondary} stopOpacity="0.1" />
+          <stop offset="25%" stopColor="#ffffff" stopOpacity="0.75" />
+          <stop offset="48%" stopColor={palette.primary} stopOpacity="0.8" />
+          <stop offset="52%" stopColor="#030206" stopOpacity="0.1" /> {/* Cassini Division */}
+          <stop offset="60%" stopColor={palette.secondary} stopOpacity="0.7" />
+          <stop offset="90%" stopColor="#ffffff" stopOpacity="0.6" />
+          <stop offset="100%" stopColor={palette.primary} stopOpacity="0.1" />
+        </linearGradient>
+
+        <filter id="cosmosGlow">
+          <feGaussianBlur stdDeviation="8" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
 
-        {/* Radial gradients for planet rings */}
-        <radialGradient id="planetGrad">
-          <stop offset="0%" stopColor="#FF00FF" stopOpacity="0.8" />
-          <stop offset="70%" stopColor="#00FFFF" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#000000" stopOpacity="0" />
-        </radialGradient>
+        <filter id="nebulaSoft">
+          <feGaussianBlur stdDeviation="35" result="blur" />
+        </filter>
       </defs>
 
-      {/* Base cosmic sky */}
-      <rect width={viewW} height={viewH} fill="url(#cosmosSkyGrad)" />
+      {/* ── 1. Cosmic Background Gradient ────────────────────────── */}
+      <rect width={viewW} height={viewH} fill="url(#deepSkyGrad)" />
 
-      {/* Nebula clouds (animated opacity cycling) */}
-      {nebulae.map((nebula, i) => (
-        <motion.g key={`nebula-${i}`}>
-          <motion.circle
-            cx={nebula.cx}
-            cy={nebula.cy}
-            r={nebula.r}
-            fill={nebula.color}
-            filter="url(#nebulaBlur)"
-            animate={{
-              opacity: prefersReducedMotion ? [0.3, 0.3] : [0.15, 0.5, 0.15],
-              r: prefersReducedMotion ? [nebula.r, nebula.r] : [nebula.r * 0.9, nebula.r, nebula.r * 0.9],
-            }}
-            transition={{
-              opacity: { duration: nebulaDuration + i * 2, ease: "easeInOut", repeat: Infinity },
-              r: { duration: (nebulaDuration + i * 2) * 1.2, ease: "easeInOut", repeat: Infinity },
-            }}
+      {/* ── 2. Procedural Deep Stellar Nebulae ─────────────────────── */}
+      <g filter="url(#nebulaSoft)">
+        {nebulae.map((neb, idx) => (
+          <motion.ellipse
+            key={`nebula-${idx}`}
+            cx={neb.cx}
+            cy={neb.cy}
+            rx={neb.rx}
+            ry={neb.ry}
+            fill={neb.color}
+            opacity={neb.opacity}
+            transform={`rotate(${neb.rotate} ${neb.cx} ${neb.cy})`}
+            animate={
+              prefersReducedMotion
+                ? { opacity: neb.opacity }
+                : {
+                    opacity: [neb.opacity * 0.8, neb.opacity * 1.25, neb.opacity * 0.8],
+                  }
+            }
+            transition={{ duration: 7 + idx * 1.5, repeat: Infinity, ease: "easeInOut" }}
           />
-        </motion.g>
-      ))}
+        ))}
+      </g>
 
-      {/* Dense star field with twinkling */}
-      <motion.g
-        animate={{
-          y: prefersReducedMotion ? [0, 0] : [-10, 10, -10],
-        }}
-        transition={{
-          duration: parallaxDuration * 1.5,
-          ease: "easeInOut",
-          repeat: Infinity,
-        }}
-        style={{ willChange: "transform" }}
-      >
-        {stars.map((star) => (
+      {/* ── 3. Procedural Constellation Links ────────────────────── */}
+      <g>
+        {constellations.map((c, i) => (
+          <line
+            key={`constel-${i}`}
+            x1={c.from.x}
+            y1={c.from.y}
+            x2={c.to.x}
+            y2={c.to.y}
+            stroke="rgba(255,255,255,0.24)"
+            strokeWidth="0.9"
+            strokeDasharray="4 4"
+          />
+        ))}
+      </g>
+
+      {/* ── 4. Starfield (140+ Spectral Stars) ──────────────────── */}
+      <g>
+        {stars.map((s) => (
           <motion.circle
-            key={`star-${star.x}-${star.y}`}
-            cx={`${star.x}%`}
-            cy={`${star.y}%`}
-            r={star.r}
-            fill={star.color}
-            filter="url(#starGlow)"
+            key={`star-${s.id}`}
+            cx={s.x}
+            cy={s.y}
+            r={s.r}
+            fill={s.color}
             animate={{
-              opacity: prefersReducedMotion ? [1, 1] : [0.3, 1, 0.3],
+              opacity: prefersReducedMotion ? 0.85 : [0.2, 0.95, 0.2],
             }}
             transition={{
-              duration: star.duration,
-              delay: star.delay,
+              duration: s.duration,
+              delay: s.delay,
               repeat: Infinity,
               ease: "easeInOut",
             }}
           />
         ))}
-      </motion.g>
+      </g>
 
-      {/* Giant ringed planet on horizon */}
-      <motion.g
-        animate={{
-          y: prefersReducedMotion ? [0, 0] : [-5, 5, -5],
-        }}
-        transition={{
-          duration: parallaxDuration * 2,
-          ease: "easeInOut",
-          repeat: Infinity,
-        }}
-        style={{ willChange: "transform" }}
-      >
-        {/* Planet shadow base */}
-        <ellipse cx={planetX} cy={planetY + 20} rx={planetR + 20} ry={15} fill="rgba(0,0,0,0.4)" />
+      {/* ── 5. Shooting Comets ──────────────────────────────────── */}
+      <g>
+        {comets.map((cm, i) => (
+          <motion.line
+            key={`comet-${i}`}
+            x1={cm.x1}
+            y1={cm.y1}
+            x2={cm.x2}
+            y2={cm.y2}
+            stroke="#a5f3fc"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }}
+            animate={
+              prefersReducedMotion
+                ? { opacity: 0 }
+                : {
+                    pathLength: [0, 1, 0],
+                    opacity: [0, 1, 0],
+                  }
+            }
+            transition={{
+              duration: cm.duration,
+              delay: cm.delay,
+              repeat: Infinity,
+              repeatDelay: 6,
+              ease: "easeOut",
+            }}
+          />
+        ))}
+      </g>
 
-        {/* Outer ring 1 (tilted) */}
-        <motion.ellipse
-          cx={planetX}
-          cy={planetY}
-          rx={180}
-          ry={25}
+      {/* ── 6. Companion Moons ──────────────────────────────────── */}
+      {moons.map((m, idx) => (
+        <g key={`moon-${idx}`}>
+          <circle cx={m.cx} cy={m.cy} r={m.r} fill={m.color} />
+          {/* Shadow crescent */}
+          <circle cx={m.cx + m.r * 0.35} cy={m.cy + m.r * 0.2} r={m.r * 0.85} fill="#09090b" opacity="0.65" />
+        </g>
+      ))}
+
+      {/* ── 7. Planetary System: Rings (Back Half) ──────────────── */}
+      <g transform={`rotate(${ringTilt} ${planetX} ${planetY})`}>
+        {/* Back half of ring (drawn before planet so planet obscures it) */}
+        <path
+          d={`
+            M${planetX - ringRadiusX},${planetY}
+            A${ringRadiusX},${ringRadiusY} 0 0,1 ${planetX + ringRadiusX},${planetY}
+          `}
+          stroke="url(#ringGrad)"
+          strokeWidth="32"
           fill="none"
-          stroke="#FF00FF"
-          strokeWidth="4"
-          opacity="0.6"
-          animate={{
-            rotate: prefersReducedMotion ? [0, 0] : [0, 360],
-          }}
-          transition={{
-            duration: 45,
-            ease: "linear",
-            repeat: Infinity,
-          }}
-          style={{
-            transformOrigin: `${planetX}px ${planetY}px`,
-            willChange: "transform",
-          }}
+          opacity="0.8"
         />
+      </g>
 
-        {/* Outer ring 2 (different angle) */}
-        <motion.ellipse
-          cx={planetX}
-          cy={planetY}
-          rx={160}
-          ry={20}
-          fill="none"
-          stroke="#00FFFF"
-          strokeWidth="2"
-          opacity="0.4"
-          animate={{
-            rotate: prefersReducedMotion ? [0, 0] : [0, -360],
-          }}
-          transition={{
-            duration: 60,
-            ease: "linear",
-            repeat: Infinity,
-          }}
-          style={{
-            transformOrigin: `${planetX}px ${planetY}px`,
-            willChange: "transform",
-          }}
-        />
-
-        {/* Planet sphere */}
+      {/* ── 8. Exoplanet Body & Atmospheric Limb ────────────────── */}
+      <g filter="url(#cosmosGlow)">
+        {/* Atmospheric Glow */}
         <motion.circle
           cx={planetX}
           cy={planetY}
-          r={planetR}
-          fill="url(#planetGrad)"
-          animate={{
-            opacity: prefersReducedMotion ? [0.8, 0.8] : [0.7, 1, 0.7],
-          }}
-          transition={{
-            duration: 4,
-            ease: "easeInOut",
-            repeat: Infinity,
-          }}
+          r={planetR + 8}
+          fill="none"
+          stroke={palette.secondary}
+          strokeWidth="6"
+          opacity="0.5"
+          animate={{ opacity: [0.4, 0.65, 0.4] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
         />
 
-        {/* Planet details (atmospheric bands) */}
-        {[0, 1, 2, 3].map((i) => (
-          <ellipse
-            key={`band-${i}`}
-            cx={planetX}
-            cy={planetY - planetR / 2 + (i * planetR) / 2}
-            rx={planetR - 10}
-            ry={planetR / 4}
-            fill="none"
-            stroke="#FF00FF"
-            strokeWidth="1"
-            opacity="0.3"
-          />
-        ))}
+        {/* Planet Sphere */}
+        <circle cx={planetX} cy={planetY} r={planetR} fill="url(#planetSurface)" />
+      </g>
 
-        {/* Planet core glow */}
-        <circle cx={planetX - 20} cy={planetY - 20} r={30} fill="#FFFF00" opacity="0.15" filter="url(#nebulaBlur)" />
-      </motion.g>
-
-      {/* Distant nebula swirls */}
-      <motion.g opacity="0.3">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <motion.circle
-            key={`back-nebula-${i}`}
-            cx={`${25 + i * 40}%`}
-            cy="70%"
-            r={200}
-            fill="#6600CC"
-            animate={{
-              opacity: prefersReducedMotion ? [0.3, 0.3] : [0.1, 0.3, 0.1],
-            }}
-            transition={{
-              duration: 10 + i * 3,
-              ease: "easeInOut",
-              repeat: Infinity,
-              delay: i,
-            }}
-            filter="url(#nebulaBlur)"
-          />
-        ))}
-      </motion.g>
-
-      {/* Space depth fade */}
-      <defs>
-        <linearGradient id="cosmosFade" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
-          <stop offset="0%" stopColor={palette.horizon} stopOpacity={0} />
-          <stop offset="100%" stopColor={palette.horizon} stopOpacity={0.8} />
-        </linearGradient>
-      </defs>
-      <rect width={viewW} height={viewH} fill="url(#cosmosFade)" pointerEvents="none" />
+      {/* ── 9. Planetary System: Rings (Front Half) ─────────────── */}
+      <g transform={`rotate(${ringTilt} ${planetX} ${planetY})`}>
+        {/* Front half of ring (drawn in front of planet) */}
+        <path
+          d={`
+            M${planetX + ringRadiusX},${planetY}
+            A${ringRadiusX},${ringRadiusY} 0 0,1 ${planetX - ringRadiusX},${planetY}
+          `}
+          stroke="url(#ringGrad)"
+          strokeWidth="32"
+          fill="none"
+          opacity="0.95"
+        />
+      </g>
     </motion.svg>
   );
 }
@@ -347,7 +399,7 @@ function DeepCosmosTheme(props: ThemeComponentProps) {
 export const deepCosmosTheme: ThemeDefinition = {
   id: "deep_cosmos",
   name: "Deep Cosmos",
-  description: "Swirling nebulae, dense star fields, and a magnificent ringed gas giant",
+  description: "Procedural planetary system with rings, companion moons, stellar nebulae, and comets",
   palettes: DEEP_COSMOS_PALETTES,
   renderer: DeepCosmosTheme,
 };

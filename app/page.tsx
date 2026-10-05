@@ -204,6 +204,7 @@ export default function Home() {
           currentTheme={theme}
           onThemeChange={setTheme}
           palette={mounted ? THEME_REGISTRY[theme].palettes[tod] : undefined}
+          variantSeed={variantSeed}
         />
 
         {/* Back to portfolio link */}
@@ -233,6 +234,13 @@ export default function Home() {
         onSaveScenery={handleSaveAction}
         onToggleDarkMode={() => setDarkMode((v) => !v)}
         onRandomizeScenery={() => setSceneVariant((v) => (v * 1664525 + 1013904223) >>> 0)}
+        onCycleTheme={() => {
+          const themeNames = getThemeNames();
+          setTheme((cur) => {
+            const idx = themeNames.indexOf(cur);
+            return themeNames[(idx + 1) % themeNames.length];
+          });
+        }}
         onNextTimePreset={handleNextPreset}
         onPrevTimePreset={handlePrevPreset}
       />

@@ -12,15 +12,17 @@ const SHORTCUTS: Shortcut[] = [
   { keys: ["?"], description: "Show keyboard shortcuts" },
   { keys: ["Esc"], description: "Close modals" },
   { keys: ["s"], description: "Save scenery" },
-  { keys: ["d"], description: "Toggle dark mode" },
-  { keys: ["r"], description: "Randomize scenery" },
-  { keys: ["←", "→"], description: "Change time of day" },
+  { keys: ["d"], description: "Toggle AMOLED dark mode" },
+  { keys: ["r"], description: "New landscape seed" },
+  { keys: ["t"], description: "Cycle scene theme" },
+  { keys: ["←", "→"], description: "Cycle scene lighting (visual only)" },
 ];
 
 interface KeyboardShortcutsProps {
   onSaveScenery?: () => void;
   onToggleDarkMode?: () => void;
   onRandomizeScenery?: () => void;
+  onCycleTheme?: () => void;
   onNextTimePreset?: () => void;
   onPrevTimePreset?: () => void;
 }
@@ -29,6 +31,7 @@ export default function KeyboardShortcuts({
   onSaveScenery,
   onToggleDarkMode,
   onRandomizeScenery,
+  onCycleTheme,
   onNextTimePreset,
   onPrevTimePreset,
 }: KeyboardShortcutsProps) {
@@ -55,6 +58,9 @@ export default function KeyboardShortcuts({
       } else if ((e.key === "r" || e.key === "R") && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         onRandomizeScenery?.();
+      } else if ((e.key === "t" || e.key === "T") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        onCycleTheme?.();
       } else if (e.key === "ArrowRight" && !e.ctrlKey && !e.metaKey && !e.altKey) {
         e.preventDefault();
         onNextTimePreset?.();
@@ -66,7 +72,7 @@ export default function KeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyPress);
     return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [onSaveScenery, onToggleDarkMode, onRandomizeScenery, onNextTimePreset, onPrevTimePreset]);
+  }, [onSaveScenery, onToggleDarkMode, onRandomizeScenery, onCycleTheme, onNextTimePreset, onPrevTimePreset]);
 
   return (
     <>
@@ -108,7 +114,7 @@ export default function KeyboardShortcuts({
                   <h2 className="text-xl font-bold text-white">Keyboard Shortcuts</h2>
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white/90 hover:bg-white/10 rounded-lg transition-colors"
+                    className="w-8 h-8 flex items-center justify-center text-white/60 hover:text-white/90 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
                     aria-label="Close"
                   >
                     ×

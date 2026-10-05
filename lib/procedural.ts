@@ -1,0 +1,195 @@
+/**
+ * Procedural generation utilities for status-site scenery.
+ * Features Mulberry32 PRNG and dynamic SVG path/geometry generators
+ * for organic mountains, dunes, shorelines, nebulae, and celestial formations.
+ */
+
+/**
+ * Fast, high-quality 32-bit pseudo-random number generator (Mulberry32).
+ * Produces uniform distribution in [0, 1) with excellent statistical properties.
+ */
+export function makePRNG(initialSeed: number): () => number {
+  let s = (initialSeed >>> 0) || 1;
+  return function next(): number {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = Math.imul(s ^ (s >>> 15), 1 | s);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/** Random float between min and max */
+export function rngRange(rng: () => number, min: number, max: number): number {
+  return min + rng() * (max - min);
+}
+
+/** Random integer between min and max (inclusive) */
+export function rngInt(rng: () => number, min: number, max: number): number {
+  return Math.floor(rngRange(rng, min, max + 1));
+}
+
+/** Pick a random item from an array */
+export function rngChoice<T>(rng: () => number, array: readonly T[]): T {
+  return array[Math.floor(rng() * array.length)];
+}
+
+/**
+ * Point representation for geometry generation
+ */
+export interface Point2D {
+  x: number;
+  y: number;
+}
+
+/**
+ * Generate a smooth closed SVG polygon/path from points using cubic Catmull-Rom or Bezier interpolation.
+ */
+export function pointsToSmoothPath(points: Point2D[], closeBottom = true, viewW = 1440, viewH = 900): string {
+  if (points.length < 2) return "";
+
+  let d = `M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[Math.max(0, i - 1)];
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const p3 = points[Math.min(points.length - 1, i + 2)];
+
+    // Catmull-Rom to Cubic Bezier control points
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+
+    d += ` C${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+
+  if (closeBottom) {
+    const lastX = points[points.length - 1].x;
+    d += ` L${lastX.toFixed(1)},${viewH} L${points[0].x.toFixed(1)},${viewH} Z`;
+  }
+
+  return d;
+}
+
+/**
+ * Procedural Mountain Ridge Generator
+ * Produces jagged or alpine mountain paths with variable peaks, valleys, and saddles.
+ */
+export function generateProceduralRidge(
+  rng: () => number,
+  viewW: number,
+  viewH: number,
+  options: {
+    baseY: number; // e.g. viewH * 0.65
+    minHeight: number; // peak height above baseY (positive)
+    maxHeight: number;
+    peaksCount: number; // 6 - 12
+    margin?: number;
+    jaggedness?: number; // 0 (smooth) to 1 (jagged)
+  }
+): { path: string; peaks: Point2D[]; points: Point2D[] } {
+  const margin = options.margin ?? 80;
+  const totalW = viewW + margin * 2;
+  const count = options.peaksCount;
+  const stepX = totalW / count;
+
+  const points: Point2D[] = [];
+  const peaks: Point2D[] = [];
+
+  points.push({ x: -margin, y: options.baseY + rngRange(rng, -15, 15) });
+
+  for (let i = 0; i <= count; i++) {
+    const isPeak = i % 2 === 1;
+    const xBase = -margin + i * stepX;
+    const xJitter = rngRange(rng, -stepX * 0.25, stepX * 0.25);
+    const x = Math.max(-margin, Math.min(viewW + margin, xBase + xJitter));
+
+    let y: number;
+    if (isPeak) {
+      const peakH = rngRange(rng, options.minHeight, options.maxHeight);
+      y = options.baseY - peakH;
+      peaks.push({ x, y });
+    } else {
+      // Valley / saddle
+      const saddleH = rngRange(rng, options.minHeight * 0.2, options.minHeight * 0.55);
+      y = options.baseY - saddleH;
+    }
+
+    // Add optional micro-ridges for jaggedness
+    if (options.jaggedness && options.jaggedness > 0.3 && i > 0) {
+      const prev = points[points.length - 1];
+      const midX = (prev.x + x) / 2 + rngRange(rng, -10, 10);
+      const midY = (prev.y + y) / 2 + rngRange(rng, -18 * options.jaggedness, 18 * options.jaggedness);
+      points.push({ x: midX, y: midY });
+    }
+
+    points.push({ x, y });
+  }
+
+  // Build SVG path: line segments for crisp rocky mountains
+  let path = `M${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+  for (let i = 1; i < points.length; i++) {
+    path += ` L${points[i].x.toFixed(1)},${points[i].y.toFixed(1)}`;
+  }
+  path += ` L${viewW + margin},${viewH} L${-margin},${viewH} Z`;
+
+  return { path, peaks, points };
+}
+
+/**
+ * Procedural Rolling Hills / Dunes Generator
+ * Produces soft, undulating curves with varied crests and dips.
+ */
+export function generateProceduralHills(
+  rng: () => number,
+  viewW: number,
+  viewH: number,
+  options: {
+    baseY: number;
+    amplitude: number;
+    frequency: number; // typically 3 - 6 control nodes
+    margin?: number;
+  }
+): string {
+  const margin = options.margin ?? 100;
+  const nodesCount = options.frequency;
+  const stepX = (viewW + margin * 2) / nodesCount;
+
+  const points: Point2D[] = [];
+  points.push({ x: -margin, y: options.baseY });
+
+  for (let i = 1; i <= nodesCount; i++) {
+    const x = -margin + i * stepX + rngRange(rng, -stepX * 0.2, stepX * 0.2);
+    const y = options.baseY + rngRange(rng, -options.amplitude, options.amplitude);
+    points.push({ x, y });
+  }
+
+  return pointsToSmoothPath(points, true, viewW, viewH);
+}
+
+/**
+ * Procedural Sand Dune with Sharp Knife-Edge Crest
+ * Generates wind-sculpted desert dunes with distinct windward and slip face curves.
+ */
+export function generateProceduralDune(
+  rng: () => number,
+  viewW: number,
+  viewH: number,
+  baseY: number,
+  crestHeight: number
+): { path: string; crestPoints: Point2D[] } {
+  const crestPoints: Point2D[] = [];
+  const segments = 5;
+  const stepX = (viewW + 200) / segments;
+
+  for (let i = 0; i <= segments; i++) {
+    const x = -100 + i * stepX + rngRange(rng, -stepX * 0.15, stepX * 0.15);
+    // Crest waves up and down
+    const y = baseY - (i % 2 === 1 ? crestHeight * rngRange(rng, 0.75, 1.25) : crestHeight * rngRange(rng, 0.2, 0.5));
+    crestPoints.push({ x, y });
+  }
+
+  const path = pointsToSmoothPath(crestPoints, true, viewW, viewH);
+  return { path, crestPoints };
+}

@@ -2,7 +2,7 @@
 
 import { useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Shuffle, Download, ChevronDown, ChevronUp, Sun, Sunset, Moon, Sunrise } from "lucide-react";
+import { Sparkles, Shuffle, Download, ChevronDown, ChevronUp, Sun, Sunset, Moon, Sunrise, RotateCcw } from "lucide-react";
 import { type TimeOfDay } from "@/lib/timeUtils";
 import { getSecondaryTextColorForPalette } from "@/lib/colorUtils";
 import { PresetButton } from "@/components/PresetButton";
@@ -24,6 +24,7 @@ interface ControlsProps {
   currentTheme?: ThemeName;
   onThemeChange?: (theme: ThemeName) => void;
   palette?: PaletteConfig;
+  variantSeed?: number;
 }
 
 function ControlsComponent({
@@ -39,12 +40,13 @@ function ControlsComponent({
   currentTheme = "lush_lake",
   onThemeChange,
   palette,
+  variantSeed,
 }: ControlsProps) {
   const [open, setOpen] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const themes = getAllThemes();
 
-  // Determine which preset is active (based on visual override, not actual time)
+  // Determine which lighting preset is active (visual override only, clock remains untouched)
   const currentPreset: "live" | TimeOfDay = visualTimeOverride ?? "live";
 
   // Compute text colors based on palette
@@ -57,6 +59,8 @@ function ControlsComponent({
     }
     onVisualTimeChange(p);
   };
+
+  const seedHex = variantSeed !== undefined ? variantSeed.toString(16).toUpperCase().padStart(6, "0").slice(-6) : undefined;
 
   return (
     <motion.div
@@ -87,8 +91,10 @@ function ControlsComponent({
           }}
         >
           <div className="flex items-center gap-2">
-            <Clock size={14} className="group-hover:text-white transition-colors" />
-            <span className="text-xs font-medium tracking-widest uppercase group-hover:text-white transition-colors">Scene Controls</span>
+            <Sparkles size={14} className="group-hover:text-white transition-colors" />
+            <span className="text-xs font-semibold tracking-widest uppercase group-hover:text-white transition-colors">
+              Scene Controls
+            </span>
           </div>
           <span className="text-xs font-mono uppercase tracking-wider text-white/50 group-hover:text-white/90 transition-colors flex items-center gap-1.5">
             <span>{open ? "Close" : "Customize"}</span>
@@ -110,81 +116,138 @@ function ControlsComponent({
               <div className="px-6 pb-5 flex flex-col gap-4">
                 <div className="h-px bg-white/10" />
 
-                {/* Preset time selector — responsive grid */}
+                {/* 1. Scene Lighting Selector (Strictly visual — local clock is decoupled) */}
                 <div className="flex flex-col gap-2">
-                  <span className="text-xs tracking-widest uppercase" style={{ color: `${secondaryText}80` }}>Time Preset</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: `${secondaryText}90` }}>
+                      Scene Lighting
+                    </span>
+                    <span className="text-[0.68rem] font-mono text-white/55 tracking-normal">
+                      Visual only · Clock stays live
+                    </span>
+                  </div>
+
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     <PresetButton
                       preset="live"
-                      icon={<Clock size={14} />}
+                      icon={<RotateCcw size={13} />}
                       label="Live"
                       isActive={currentPreset === "live"}
                       onClick={() => setPreset("live")}
-                      ariaLabel="Use live system time"
+                      ariaLabel="Sync scenery lighting with live real-time hour"
                     />
                     <PresetButton
                       preset="day"
-                      icon={<Sun size={14} />}
+                      icon={<Sun size={13} />}
                       label="Day"
                       isActive={currentPreset === "day"}
                       onClick={() => setPreset("day")}
-                      ariaLabel="Set to daytime"
+                      ariaLabel="Visual day lighting preset"
                     />
                     <PresetButton
                       preset="afternoon"
-                      icon={<Sunrise size={14} />}
+                      icon={<Sunrise size={13} />}
                       label="Afternoon"
                       isActive={currentPreset === "afternoon"}
                       onClick={() => setPreset("afternoon")}
-                      ariaLabel="Set to afternoon"
+                      ariaLabel="Visual afternoon lighting preset"
                     />
                     <PresetButton
                       preset="evening"
-                      icon={<Sunset size={14} />}
+                      icon={<Sunset size={13} />}
                       label="Evening"
                       isActive={currentPreset === "evening"}
                       onClick={() => setPreset("evening")}
-                      ariaLabel="Set to evening"
+                      ariaLabel="Visual evening lighting preset"
                     />
                     <PresetButton
                       preset="night"
-                      icon={<Moon size={14} />}
+                      icon={<Moon size={13} />}
                       label="Night"
                       isActive={currentPreset === "night"}
                       onClick={() => setPreset("night")}
-                      ariaLabel="Set to night"
+                      ariaLabel="Visual night lighting preset"
                     />
+                  </div>
+
+                  {/* Active override status pill with 1-click reset */}
+                  {visualTimeOverride && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[0.68rem] text-amber-200"
+                    >
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                        <span>Visual lighting override active (Clock stays live)</span>
+                      </span>
+                      <button
+                        onClick={() => setPreset("live")}
+                        className="text-amber-100 hover:text-white underline font-mono text-[0.65rem] cursor-pointer ml-2"
+                      >
+                        Reset to Live
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+
+                {/* 2. Procedural Landscape Controls */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: `${secondaryText}90` }}>
+                      Procedural Landscape
+                    </span>
+                    {seedHex && (
+                      <span className="text-[0.65rem] font-mono px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-white/70">
+                        Seed #{seedHex}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={onRandomizeScenery}
+                      disabled={onSaveLoading}
+                      className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 sm:py-2.5 text-white/85 hover:text-white bg-white/10 hover:bg-white/16 border border-white/15 text-xs font-medium tracking-wide transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-12 sm:min-h-10"
+                      aria-label="Generate new landscape seed"
+                    >
+                      <Shuffle size={14} />
+                      <span>New Seed</span>
+                    </button>
+
+                    {onRandomizeAll && (
+                      <button
+                        onClick={onRandomizeAll}
+                        disabled={onSaveLoading}
+                        className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 sm:py-2.5 text-xs font-medium tracking-wide transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-12 sm:min-h-10"
+                        style={{
+                          background: `linear-gradient(135deg, ${COLOR_PALETTE.neon.purple}30, ${COLOR_PALETTE.neon.magenta}30)`,
+                          border: `1.5px solid ${COLOR_PALETTE.neon.magenta}60`,
+                          color: COLOR_PALETTE.neon.magenta,
+                        }}
+                        aria-label="Randomize seed and theme"
+                      >
+                        <Sparkles size={14} />
+                        <span>Randomize All</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                {/* Dark Mode toggle */}
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs tracking-widest uppercase" style={{ color: `${secondaryText}80` }}>Dark Mode</span>
-                  <button
-                    onClick={onToggleDarkMode}
-                    className={`min-w-[96px] flex items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 sm:py-2 text-xs font-medium border transition-all duration-200 cursor-pointer min-h-12 sm:min-h-10 ${
-                      darkModeEnabled
-                        ? "text-white bg-white/20 border-white/30"
-                        : "text-white/70 bg-white/10 hover:bg-white/14 border-white/15 hover:text-white"
-                    }`}
-                    aria-pressed={darkModeEnabled}
-                    aria-label="Toggle dark mode"
-                  >
-                    {darkModeEnabled ? "On" : "Off"}
-                  </button>
-                </div>
-
-                {/* Theme selector */}
+                {/* 3. Scene Theme Selector */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs tracking-widest uppercase" style={{ color: `${secondaryText}80` }}>Scene Theme</span>
+                    <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: `${secondaryText}90` }}>
+                      Theme
+                    </span>
                     <button
                       onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-                      className="transition-colors cursor-pointer"
+                      className="transition-colors cursor-pointer text-xs font-mono flex items-center gap-1"
                       style={{ color: `${secondaryText}b3` }}
                       aria-label="Toggle theme menu"
                       aria-expanded={themeMenuOpen}
                     >
+                      <span>{themes.find((t) => t.id === currentTheme)?.name || "Select"}</span>
                       {themeMenuOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                     </button>
                   </div>
@@ -237,47 +300,39 @@ function ControlsComponent({
                     )}
                   </AnimatePresence>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <button
-                    onClick={onRandomizeScenery}
-                    disabled={onSaveLoading}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 sm:py-2.5 text-white/80 hover:text-white bg-white/10 hover:bg-white/16 border border-white/15 text-xs font-medium tracking-wide transition-all duration-300 ease-out cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-12 sm:min-h-10"
-                    aria-label="Randomize scenery only"
-                  >
-                    <Shuffle size={14} />
-                    <span className="hidden sm:inline">Randomize Scenery</span>
-                    <span className="sm:hidden">Randomize</span>
-                  </button>
-{onRandomizeAll && (
-                    <button
-                      onClick={onRandomizeAll}
-                      disabled={onSaveLoading}
-                      className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 sm:py-2.5 text-xs font-medium tracking-wide transition-all duration-300 ease-out cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-12 sm:min-h-10"
-                      style={{
-                        background: `linear-gradient(135deg, ${COLOR_PALETTE.neon.purple}25, ${COLOR_PALETTE.neon.magenta}25)`,
-                        border: `2px solid ${COLOR_PALETTE.neon.magenta}60`,
-                        color: COLOR_PALETTE.neon.magenta,
-                      }}
-                      aria-label="Randomize everything including theme"
-                    >
-                      <Shuffle size={14} />
-                      <span className="hidden sm:inline">Randomize All</span>
-                      <span className="sm:hidden">All</span>
-                    </button>
-                  )}
 
-                  
+                {/* 4. AMOLED Dark Mode & Save Scenery */}
+                <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/10">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: `${secondaryText}90` }}>
+                      AMOLED Mode
+                    </span>
+                    <span className="text-[0.68rem] text-white/50">True black (Night scenes)</span>
+                  </div>
                   <button
-                    onClick={onSaveScenery}
-                    disabled={onSaveLoading}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-lg px-4 py-3 sm:py-2.5 text-white/80 hover:text-white bg-white/10 hover:bg-white/16 border border-white/15 text-xs font-medium tracking-wide transition-all duration-300 ease-out cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-12 sm:min-h-10"
-                    aria-label="Save scenery as image"
+                    onClick={onToggleDarkMode}
+                    className={`min-w-[80px] flex items-center justify-center rounded-lg px-3 py-2 text-xs font-medium border transition-all duration-200 cursor-pointer ${
+                      darkModeEnabled
+                        ? "text-white bg-white/20 border-white/30 font-semibold"
+                        : "text-white/70 bg-white/10 hover:bg-white/14 border-white/15 hover:text-white"
+                    }`}
+                    aria-pressed={darkModeEnabled}
+                    aria-label="Toggle AMOLED dark mode"
                   >
-                    <Download size={14} />
-                    <span className="hidden sm:inline">{onSaveLoading ? "Saving..." : "Save Scenery"}</span>
-                    <span className="sm:hidden">{onSaveLoading ? "Saving..." : "Save"}</span>
+                    {darkModeEnabled ? "Enabled" : "Disabled"}
                   </button>
                 </div>
+
+                {/* Save Scenery Button */}
+                <button
+                  onClick={onSaveScenery}
+                  disabled={onSaveLoading}
+                  className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-white/90 hover:text-white bg-white/12 hover:bg-white/18 border border-white/20 text-xs font-medium tracking-wide transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-11"
+                  aria-label="Save scenery as PNG image"
+                >
+                  <Download size={14} />
+                  <span>{onSaveLoading ? "Rendering Scenery PNG..." : "Save Scenery Image"}</span>
+                </button>
 
                 {/* Save error feedback */}
                 {onSaveError && (

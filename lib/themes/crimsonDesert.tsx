@@ -1,148 +1,216 @@
 import { motion } from "framer-motion";
 import { ThemeDefinition, ThemePalettes, ThemeComponentProps } from "./themeTypes";
-
-function makePRNG(seed: number) {
-  return function () {
-    seed = (seed * 1103515245 + 12345) >>> 0;
-    return (seed / 2147483648) % 1;
-  };
-}
+import {
+  makePRNG,
+  rngRange,
+  rngInt,
+  generateProceduralDune,
+  Point2D,
+} from "@/lib/procedural";
 
 const CRIMSON_DESERT_PALETTES: ThemePalettes = {
   day: {
-    sky: ["#87CEEB", "#F5DEB3"],
-    horizon: "#FFD700",
-    ground: "#D2B48C",
-    primary: "#CD853F",
-    secondary: "#DEB887",
+    sky: ["#f59e0b", "#fde68a"],
+    horizon: "#fef3c7",
+    ground: "#b45309",
+    primary: "#d97706",
+    secondary: "#92400e",
   },
   afternoon: {
-    sky: ["#F5DEB3", "#FF6B6B"],
-    horizon: "#FF8C00",
-    ground: "#D2691E",
-    primary: "#8B4513",
-    secondary: "#A0522D",
+    sky: ["#ea580c", "#fbbf24"],
+    horizon: "#fed7aa",
+    ground: "#9a3412",
+    primary: "#c2410c",
+    secondary: "#7c2d12",
   },
   evening: {
-    sky: ["#FF4500", "#8B0000"],
-    horizon: "#DC143C",
-    ground: "#654321",
-    primary: "#4B0000",
-    secondary: "#8B4513",
+    sky: ["#991b1b", "#4c0519"],
+    horizon: "#fda4af",
+    ground: "#7f1d1d",
+    primary: "#881337",
+    secondary: "#4c0519",
   },
   night: {
-    sky: ["#1a0033", "#0d001a"],
-    horizon: "#1a0d00",
-    ground: "#0d0606",
-    primary: "#1a0d00",
-    secondary: "#2d1a0d",
+    sky: ["#09090b", "#18181b"],
+    horizon: "#27272a",
+    ground: "#292524",
+    primary: "#44403c",
+    secondary: "#1c1917",
     amoled: {
-      sky: ["#000000", "#1a0d00"],
-      horizon: "#330000",
-      ground: "#000000",
-      primary: "#ff6600",
-      secondary: "#ffaa33",
+      sky: ["#000000", "#09090b"],
+      horizon: "#121212",
+      ground: "#0c0a09",
+      primary: "#1c1917",
+      secondary: "#080706",
     },
-  }
+  },
 };
 
-interface Cactus {
+// ── Data structures for procedural desert ──────────────────────────
+interface Mesa {
   x: number;
+  topY: number;
+  topW: number;
+  baseW: number;
   height: number;
-  armCount: number;
 }
 
-interface Dune {
-  offset: number;
-  scale: number;
-  opacity: number;
-}
-
-function generateCacti(seed: number, viewW: number): Cactus[] {
-  const rng = makePRNG(seed);
-  const cacti: Cactus[] = [];
-
-  for (let i = 0; i < 5; i++) {
-    cacti.push({
-      x: (rng() * viewW * 0.8) + viewW * 0.1,
-      height: rng() * 60 + 80,
-      armCount: Math.floor(rng() * 4) + 2,
-    });
-  }
-
-  return cacti;
-}
-
-function generateDunes(seed: number): Dune[] {
-  const rng = makePRNG(seed);
-  const dunes: Dune[] = [];
-
-  for (let i = 0; i < 4; i++) {
-    dunes.push({
-      offset: rng() * 20 - 10,
-      scale: 1 - i * 0.15,
-      opacity: 0.9 - i * 0.15,
-    });
-  }
-
-  return dunes;
-}
-
-interface Rock {
+interface Saguaro {
   x: number;
   y: number;
-  size: number;
+  height: number;
+  trunkW: number;
+  arms: {
+    side: "left" | "right";
+    armY: number;
+    armLen: number;
+    armHeight: number;
+  }[];
 }
 
-function generateDesertRocks(seed: number, viewW: number, viewH: number): Rock[] {
-  const rng = makePRNG(seed);
-  const rocks: Rock[] = [];
+interface DesertRock {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  color: string;
+}
 
-  for (let i = 0; i < 8; i++) {
+interface Star {
+  id: number;
+  cx: number;
+  cy: number;
+  r: number;
+  duration: number;
+  delay: number;
+}
+
+interface ShootingStar {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  duration: number;
+  delay: number;
+}
+
+function generateMesas(rng: () => number, viewW: number, viewH: number): Mesa[] {
+  const mesas: Mesa[] = [];
+  const count = rngInt(rng, 3, 5);
+  const stepX = viewW / count;
+
+  for (let i = 0; i < count; i++) {
+    const x = stepX * i + rngRange(rng, stepX * 0.15, stepX * 0.65);
+    const height = rngRange(rng, 80, 160);
+    const topY = viewH * 0.62 - height;
+    const topW = rngRange(rng, 90, 220);
+    const baseW = topW + rngRange(rng, 60, 130);
+
+    mesas.push({ x, topY, topW, baseW, height });
+  }
+
+  return mesas;
+}
+
+function generateCacti(rng: () => number, viewW: number, viewH: number): Saguaro[] {
+  const cacti: Saguaro[] = [];
+  const count = rngInt(rng, 5, 8);
+
+  for (let i = 0; i < count; i++) {
+    const isForeground = i % 2 === 0;
+    const x = rngRange(rng, viewW * 0.08, viewW * 0.92);
+    const y = viewH * (isForeground ? rngRange(rng, 0.86, 0.94) : rngRange(rng, 0.78, 0.84));
+    const height = isForeground ? rngRange(rng, 100, 150) : rngRange(rng, 60, 95);
+    const trunkW = height * 0.12;
+
+    const armCount = rngInt(rng, 1, 3);
+    const arms: Saguaro["arms"] = [];
+
+    for (let a = 0; a < armCount; a++) {
+      arms.push({
+        side: a % 2 === 0 ? "left" : "right",
+        armY: height * rngRange(rng, 0.4, 0.65),
+        armLen: trunkW * rngRange(rng, 1.8, 2.8),
+        armHeight: height * rngRange(rng, 0.35, 0.55),
+      });
+    }
+
+    cacti.push({ x, y, height, trunkW, arms });
+  }
+
+  return cacti.sort((a, b) => a.y - b.y);
+}
+
+function generateDesertRocks(rng: () => number, viewW: number, viewH: number, color: string): DesertRock[] {
+  const rocks: DesertRock[] = [];
+  const count = rngInt(rng, 8, 14);
+
+  for (let i = 0; i < count; i++) {
     rocks.push({
-      x: rng() * viewW * 0.9 + viewW * 0.05,
-      y: viewH * (0.65 + rng() * 0.15),
-      size: rng() * 20 + 8,
+      x: rngRange(rng, viewW * 0.05, viewW * 0.95),
+      y: viewH * rngRange(rng, 0.78, 0.95),
+      w: rngRange(rng, 18, 45),
+      h: rngRange(rng, 12, 28),
+      color,
     });
   }
 
   return rocks;
 }
 
-interface DesertPlant {
-  x: number;
-  y: number;
-  scale: number;
-}
-
-function generateDesertPlants(seed: number, viewW: number): DesertPlant[] {
-  const rng = makePRNG(seed);
-  const plants: DesertPlant[] = [];
-
-  for (let i = 0; i < 6; i++) {
-    plants.push({
-      x: rng() * viewW * 0.8 + viewW * 0.1,
-      y: rng() * 0.1 + 0.75,
-      scale: rng() * 0.4 + 0.6,
+function generateDesertStars(rng: () => number, viewW: number, viewH: number): { stars: Star[]; shootingStars: ShootingStar[] } {
+  const stars: Star[] = [];
+  for (let i = 0; i < 90; i++) {
+    stars.push({
+      id: i,
+      cx: rngRange(rng, 10, viewW - 10),
+      cy: rngRange(rng, 10, viewH * 0.52),
+      r: rngRange(rng, 0.6, 2.2),
+      duration: rngRange(rng, 2, 4),
+      delay: rngRange(rng, 0, 3),
     });
   }
 
-  return plants;
+  const shootingStars: ShootingStar[] = [];
+  for (let i = 0; i < 3; i++) {
+    const x1 = rngRange(rng, viewW * 0.2, viewW * 0.8);
+    const y1 = rngRange(rng, viewH * 0.05, viewH * 0.25);
+    shootingStars.push({
+      x1,
+      y1,
+      x2: x1 - rngRange(rng, 120, 220),
+      y2: y1 + rngRange(rng, 60, 110),
+      duration: rngRange(rng, 1.2, 2),
+      delay: rngRange(rng, 2, 8),
+    });
+  }
+
+  return { stars, shootingStars };
 }
 
 function CrimsonDesertTheme(props: ThemeComponentProps) {
   const { tod, palette, viewW, viewH, variantSeed, prefersReducedMotion } = props;
 
-  const cacti = generateCacti(variantSeed, viewW);
-  const dunes = generateDunes(variantSeed);
-  const rocks = generateDesertRocks(variantSeed + 1, viewW, viewH);
-  const desertPlants = generateDesertPlants(variantSeed + 2, viewW);
-  const parallaxDuration = prefersReducedMotion ? 0.1 : 25;
-  const hazeDuration = prefersReducedMotion ? 0.1 : 12;
+  const rng = makePRNG(variantSeed);
+
+  // Procedural Mesas in background
+  const mesas = generateMesas(rng, viewW, viewH);
+
+  // Procedural Layered Dunes (3 distinct sand dune ridges with unique seed-based contours)
+  const duneFar = generateProceduralDune(rng, viewW, viewH, viewH * 0.68, 60);
+  const duneMid = generateProceduralDune(rng, viewW, viewH, viewH * 0.78, 80);
+  const duneFore = generateProceduralDune(rng, viewW, viewH, viewH * 0.88, 70);
+
+  // Procedural Cacti & Rocks
+  const cacti = generateCacti(rng, viewW, viewH);
+  const rocks = generateDesertRocks(rng, viewW, viewH, palette.secondary);
+  const { stars, shootingStars } = generateDesertStars(rng, viewW, viewH);
 
   const isMoon = tod === "evening" || tod === "night";
-  const celestialX = viewW * 0.5;
-  const celestialY = viewH * (isMoon ? 0.4 : 0.2);
+  const celestialX = viewW * (0.5 + (variantSeed % 20) * 0.015);
+  const celestialY = viewH * (isMoon ? 0.22 : 0.28);
+
+  const parallaxDuration = prefersReducedMotion ? 0.1 : 28;
 
   return (
     <motion.svg
@@ -154,201 +222,310 @@ function CrimsonDesertTheme(props: ThemeComponentProps) {
       <defs>
         <motion.linearGradient id="desertSkyGrad" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
           <stop offset="0%" stopColor={palette.sky[0]} />
-          <stop offset="100%" stopColor={palette.sky[1]} />
+          <stop offset="60%" stopColor={palette.sky[1]} />
+          <stop offset="100%" stopColor={palette.horizon} />
         </motion.linearGradient>
 
-        <filter id="desertGlow">
-          <feGaussianBlur stdDeviation="12" result="blur" />
+        <linearGradient id="duneShadeFar" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.primary} stopOpacity="0.85" />
+          <stop offset="100%" stopColor={palette.secondary} stopOpacity="0.95" />
+        </linearGradient>
+
+        <linearGradient id="duneShadeFore" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={palette.ground} />
+          <stop offset="100%" stopColor={palette.secondary} />
+        </linearGradient>
+
+        <filter id="desertSunGlow">
+          <feGaussianBlur stdDeviation="16" result="blur" />
           <feMerge>
             <feMergeNode in="blur" />
             <feMergeNode in="SourceGraphic" />
           </feMerge>
         </filter>
 
-        {/* Heat haze distortion */}
-        <filter id="heatHaze">
-          <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" seed={variantSeed} />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="15" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-
-        {/* Sand dust particles */}
-        <filter id="dustNoise">
-          <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="4" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="G" />
+        <filter id="heatHazeBand">
+          <feTurbulence type="fractalNoise" baseFrequency="0.03 0.12" numOctaves="2" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
 
-      {/* Sky */}
+      {/* ── 1. Sky Gradient ─────────────────────────────────────── */}
       <rect width={viewW} height={viewH} fill="url(#desertSkyGrad)" />
 
-      {/* Heat haze band (optional day/afternoon effect) */}
+      {/* ── 2. Desert Night Sky: Stars & Shooting Stars ─────────── */}
+      {tod === "night" && (
+        <g>
+          {stars.map((s) => (
+            <motion.circle
+              key={`star-${s.id}`}
+              cx={s.cx}
+              cy={s.cy}
+              r={s.r}
+              fill="#ffffff"
+              animate={{ opacity: prefersReducedMotion ? 0.8 : [0.2, 0.9, 0.2] }}
+              transition={{
+                duration: s.duration,
+                delay: s.delay,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+
+          {/* Shooting Stars / Meteors */}
+          {shootingStars.map((ss, i) => (
+            <motion.line
+              key={`meteor-${i}`}
+              x1={ss.x1}
+              y1={ss.y1}
+              x2={ss.x2}
+              y2={ss.y2}
+              stroke="#ffffff"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={
+                prefersReducedMotion
+                  ? { opacity: 0 }
+                  : {
+                      pathLength: [0, 1, 0],
+                      opacity: [0, 1, 0],
+                    }
+              }
+              transition={{
+                duration: ss.duration,
+                delay: ss.delay,
+                repeat: Infinity,
+                repeatDelay: 5,
+                ease: "easeOut",
+              }}
+            />
+          ))}
+        </g>
+      )}
+
+      {/* ── 3. Celestial Body: Desert Sun or Moon ───────────────── */}
+      {isMoon ? (
+        <g filter="url(#desertSunGlow)">
+          <circle cx={celestialX} cy={celestialY} r={52} fill="#fed7aa" />
+          <circle cx={celestialX} cy={celestialY} r={58} fill={palette.horizon} opacity="0.3" />
+          {/* Subtle lunar maria craters */}
+          <circle cx={celestialX - 14} cy={celestialY - 12} r={10} fill="#fca5a5" opacity="0.35" />
+          <circle cx={celestialX + 12} cy={celestialY + 8} r={14} fill="#fca5a5" opacity="0.3" />
+          <circle cx={celestialX + 6} cy={celestialY - 18} r={8} fill="#fca5a5" opacity="0.25" />
+        </g>
+      ) : (
+        <g filter="url(#desertSunGlow)">
+          {/* Pulsating solar corona */}
+          <motion.circle
+            cx={celestialX}
+            cy={celestialY}
+            r={85}
+            fill={palette.horizon}
+            opacity="0.25"
+            animate={{
+              r: prefersReducedMotion ? [85, 85] : [80, 95, 80],
+              opacity: [0.2, 0.35, 0.2],
+            }}
+            transition={{ duration: 4, ease: "easeInOut", repeat: Infinity }}
+          />
+          <circle cx={celestialX} cy={celestialY} r={56} fill="#ffffff" />
+          <circle cx={celestialX} cy={celestialY} r={62} fill={palette.primary} opacity="0.45" />
+        </g>
+      )}
+
+      {/* ── 4. Procedural Sandstone Mesas & Buttes ───────────────── */}
+      <g opacity="0.75">
+        {mesas.map((m, idx) => {
+          const halfTop = m.topW / 2;
+          const halfBase = m.baseW / 2;
+          const baseY = viewH * 0.68;
+
+          return (
+            <polygon
+              key={`mesa-${idx}`}
+              points={`
+                ${m.x - halfTop},${m.topY}
+                ${m.x + halfTop},${m.topY}
+                ${m.x + halfBase},${baseY}
+                ${m.x - halfBase},${baseY}
+              `}
+              fill={palette.primary}
+            />
+          );
+        })}
+      </g>
+
+      {/* ── 5. Atmospheric Heat Haze (Day / Afternoon) ──────────── */}
       {(tod === "day" || tod === "afternoon") && (
-        <motion.rect
-          y={viewH * 0.45}
+        <rect
+          x="0"
+          y={viewH * 0.52}
           width={viewW}
-          height={viewH * 0.2}
+          height={viewH * 0.16}
           fill={palette.horizon}
-          opacity="0.15"
-          filter="url(#heatHaze)"
-          animate={{
-            y: prefersReducedMotion ? [viewH * 0.45, viewH * 0.45] : [viewH * 0.43, viewH * 0.47, viewH * 0.45],
-          }}
-          transition={{
-            duration: hazeDuration,
-            ease: "easeInOut",
-            repeat: Infinity,
-          }}
+          opacity="0.18"
+          filter="url(#heatHazeBand)"
         />
       )}
 
-      {/* Layered dunes (parallax effect) */}
-      {dunes.map((dune, i) => (
-        <motion.g
-          key={`dune-${i}`}
-          animate={{
-            x: prefersReducedMotion ? [0, 0] : [-dune.offset * 2, dune.offset * 2, -dune.offset * 2],
-          }}
-          transition={{
-            duration: parallaxDuration * (1 + i * 0.2),
-            ease: "easeInOut",
-            repeat: Infinity,
-          }}
-          style={{ willChange: "transform" }}
-        >
-          <path
-            d={`M0,${viewH * (0.65 + i * 0.08)} Q${viewW * 0.25},${viewH * (0.60 + i * 0.08)} ${viewW * 0.5},${viewH * (0.65 + i * 0.08)} T${viewW},${viewH * (0.65 + i * 0.08)} L${viewW},${viewH} L0,${viewH} Z`}
-            fill={palette.primary}
-            opacity={dune.opacity}
-            style={{
-              filter: i === 0 && tod === "night" ? "url(#dustNoise)" : "none",
-            }}
-          />
-        </motion.g>
-      ))}
+      {/* ── 6. Distant Sand Dunes ────────────────────────────────── */}
+      <motion.g
+        animate={{ x: prefersReducedMotion ? 0 : [-8, 8, -8] }}
+        transition={{ duration: parallaxDuration * 1.3, repeat: Infinity, ease: "easeInOut" }}
+        style={{ willChange: "transform" }}
+      >
+        <path d={duneFar.path} fill="url(#duneShadeFar)" />
+      </motion.g>
 
-      {/* Desert rocks */}
-      {rocks.map((rock, i) => (
-        <motion.g
-          key={`rock-${i}`}
-          animate={{
-            y: prefersReducedMotion ? [0, 0] : [0, 2, 0],
-            opacity: prefersReducedMotion ? [0.8, 0.8] : [0.7, 0.9, 0.7],
-          }}
-          transition={{
-            duration: 3.5 + i * 0.25,
-            ease: "easeInOut",
-            repeat: Infinity,
-          }}
-        >
-          <ellipse cx={rock.x} cy={rock.y + rock.size * 0.2} rx={rock.size * 0.8} ry={rock.size * 0.2} fill="rgba(0,0,0,0.15)" />
+      {/* ── 7. Midground Sweeping Dunes ─────────────────────────── */}
+      <motion.g
+        animate={{ x: prefersReducedMotion ? 0 : [-16, 16, -16] }}
+        transition={{ duration: parallaxDuration, repeat: Infinity, ease: "easeInOut" }}
+        style={{ willChange: "transform" }}
+      >
+        <path d={duneMid.path} fill={palette.ground} opacity="0.95" />
+
+        {/* Dune crest highlight line */}
+        <path
+          d={duneMid.path.split(" L")[0]}
+          stroke="#ffffff"
+          strokeWidth="1.2"
+          opacity="0.25"
+          fill="none"
+        />
+      </motion.g>
+
+      {/* ── 8. Weathered Desert Boulders & Rocks ────────────────── */}
+      {rocks.map((r, i) => (
+        <g key={`rock-${i}`}>
+          <ellipse
+            cx={r.x}
+            cy={r.y + r.h * 0.3}
+            rx={r.w * 0.8}
+            ry={r.h * 0.3}
+            fill="rgba(0,0,0,0.2)"
+          />
           <polygon
-            points={`${rock.x - rock.size},${rock.y} ${rock.x + rock.size},${rock.y} ${rock.x + rock.size * 0.6},${rock.y + rock.size} ${rock.x - rock.size * 0.6},${rock.y + rock.size}`}
-            fill={palette.secondary}
-            opacity="0.8"
+            points={`
+              ${r.x - r.w / 2},${r.y}
+              ${r.x - r.w * 0.2},${r.y - r.h}
+              ${r.x + r.w * 0.3},${r.y - r.h * 0.9}
+              ${r.x + r.w / 2},${r.y}
+            `}
+            fill={r.color}
           />
-        </motion.g>
-      ))}
-
-      {/* Small desert plants/shrubs */}
-      {desertPlants.map((plant, i) => (
-        <motion.g
-          key={`plant-${i}`}
-          transform={`translate(${plant.x}, ${plant.y * viewH})`}
-          animate={{
-            scale: prefersReducedMotion ? [1, 1] : [1, 1.08, 1],
-            opacity: prefersReducedMotion ? [0.7, 0.7] : [0.6, 0.8, 0.6],
-          }}
-          transition={{
-            duration: 2.5 + i * 0.2,
-            ease: "easeInOut",
-            repeat: Infinity,
-          }}
-        >
-          <circle cx={0} cy={0} r={6 * plant.scale} fill={palette.primary} opacity="0.7" />
-          <circle cx={-8 * plant.scale} cy={3 * plant.scale} r={4 * plant.scale} fill={palette.primary} opacity="0.6" />
-          <circle cx={8 * plant.scale} cy={3 * plant.scale} r={4 * plant.scale} fill={palette.primary} opacity="0.6" />
-          <circle cx={0} cy={8 * plant.scale} r={3 * plant.scale} fill={palette.primary} opacity="0.5" />
-        </motion.g>
-      ))}
-
-      {/* 
-
-      {/* Cacti */}
-      {cacti.map((cactus, i) => (
-        <g key={`cactus-${i}`}>
-          {/* Main stem */}
-          <rect x={cactus.x - 8} y={viewH * 0.75 - cactus.height} width={16} height={cactus.height} fill="#556B2F" rx="4" />
-
-          {/* Segmented details */}
-          {Array.from({ length: Math.floor(cactus.height / 15) }).map((_, seg) => (
-            <circle key={`seg-${seg}`} cx={cactus.x} cy={viewH * 0.75 - cactus.height + seg * 15} r="6" fill="none" stroke="#6B8E23" strokeWidth="1" />
-          ))}
-
-          {/* Arms */}
-          {Array.from({ length: cactus.armCount }).map((_, arm) => {
-            const armY = viewH * 0.75 - (cactus.height * (arm + 1)) / (cactus.armCount + 1);
-            const side = arm % 2 === 0 ? -1 : 1;
-            const armLength = 20 + (arm % 2) * 5;
-
-            return (
-              <g key={`arm-${arm}`}>
-                <line x1={cactus.x} y1={armY} x2={cactus.x + side * armLength} y2={armY - 8} stroke="#556B2F" strokeWidth="6" strokeLinecap="round" />
-                <circle cx={cactus.x + side * armLength} cy={armY - 8} r="4" fill="#6B8E23" />
-              </g>
-            );
-          })}
         </g>
       ))}
 
-      {/* Sun / Moon */}
-      {isMoon ? (
-        <>
-          <motion.circle
-            cx={celestialX}
-            cy={celestialY}
-            r={50}
-            fill="#E8EAF6"
-            filter="url(#desertGlow)"
-            animate={{
-              opacity: prefersReducedMotion ? [1, 1] : [0.9, 1, 0.9],
-            }}
-            transition={{
-              duration: 3,
-              ease: "easeInOut",
-              repeat: Infinity,
-            }}
-          />
-          <circle cx={celestialX + 18} cy={celestialY - 12} r={40} fill={palette.sky[0]} />
-        </>
-      ) : (
-        <>
-          <motion.circle
-            cx={celestialX}
-            cy={celestialY}
-            r={80}
-            fill={palette.primary}
-            opacity="0.2"
-            animate={{
-              r: prefersReducedMotion ? [80, 80] : [75, 85, 75],
-            }}
-            transition={{
-              duration: 4,
-              ease: "easeInOut",
-              repeat: Infinity,
-            }}
-          />
-          <circle cx={celestialX} cy={celestialY} r={55} fill={palette.primary} filter="url(#desertGlow)" />
-        </>
-      )}
+      {/* ── 9. Foreground Sand Dunes ────────────────────────────── */}
+      <path d={duneFore.path} fill="url(#duneShadeFore)" />
 
-      {/* Ground overlay for depth */}
-      <defs>
-        <linearGradient id="desertFade" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
-          <stop offset="0%" stopColor={palette.ground} stopOpacity={0} />
-          <stop offset="100%" stopColor={palette.ground} stopOpacity={0.3} />
-        </linearGradient>
-      </defs>
-      <rect width={viewW} height={viewH} fill="url(#desertFade)" pointerEvents="none" />
+      {/* ── 10. Procedural Saguaro Cacti ────────────────────────── */}
+      {cacti.map((c, i) => {
+        const halfTrunk = c.trunkW / 2;
+        const cactusColor = palette.secondary;
+        const cactusShade = tod === "night" ? "#0f0e0e" : "#451a03";
+
+        return (
+          <g key={`cactus-${i}`}>
+            {/* Base shadow */}
+            <ellipse
+              cx={c.x}
+              cy={c.y}
+              rx={c.trunkW * 1.6}
+              ry={c.trunkW * 0.45}
+              fill="rgba(0,0,0,0.3)"
+            />
+
+            {/* Main trunk */}
+            <rect
+              x={c.x - halfTrunk}
+              y={c.y - c.height}
+              width={c.trunkW}
+              height={c.height}
+              rx={halfTrunk}
+              fill={cactusColor}
+            />
+
+            {/* Trunk ribbing line */}
+            <line
+              x1={c.x}
+              y1={c.y - c.height + 4}
+              x2={c.x}
+              y2={c.y - 2}
+              stroke={cactusShade}
+              strokeWidth="1.5"
+              opacity="0.4"
+            />
+
+            {/* Branching arms */}
+            {c.arms.map((arm, ai) => {
+              const armW = c.trunkW * 0.85;
+              const isLeft = arm.side === "left";
+              const elbowX = isLeft ? c.x - arm.armLen : c.x + arm.armLen;
+              const elbowY = c.y - arm.armY;
+              const topY = elbowY - arm.armHeight;
+
+              return (
+                <path
+                  key={`arm-${ai}`}
+                  d={`
+                    M${c.x},${elbowY}
+                    H${elbowX}
+                    V${topY}
+                  `}
+                  fill="none"
+                  stroke={cactusColor}
+                  strokeWidth={armW}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              );
+            })}
+          </g>
+        );
+      })}
+
+      {/* ── 11. Rolling Tumbleweed (Animated) ────────────────────── */}
+      <motion.g
+        animate={
+          prefersReducedMotion
+            ? { x: viewW * 0.3 }
+            : {
+                x: [-100, viewW + 150],
+                rotate: [0, 1080],
+                y: [0, -18, 0, -14, 0],
+              }
+        }
+        transition={{
+          x: { duration: 16, repeat: Infinity, ease: "linear" },
+          rotate: { duration: 16, repeat: Infinity, ease: "linear" },
+          y: { duration: 1.8, repeat: Infinity, ease: "easeInOut" },
+        }}
+        style={{ transformOrigin: "center" }}
+      >
+        <ellipse
+          cx={100}
+          cy={viewH * 0.89}
+          rx={16}
+          ry={15}
+          fill="none"
+          stroke={palette.primary}
+          strokeWidth="1.6"
+          strokeDasharray="4 3"
+        />
+        <circle
+          cx={100}
+          cy={viewH * 0.89}
+          r={10}
+          fill="none"
+          stroke={palette.secondary}
+          strokeWidth="1.2"
+          strokeDasharray="3 3"
+        />
+      </motion.g>
     </motion.svg>
   );
 }
@@ -356,7 +533,7 @@ function CrimsonDesertTheme(props: ThemeComponentProps) {
 export const crimsonDesertTheme: ThemeDefinition = {
   id: "crimson_desert",
   name: "Crimson Desert",
-  description: "Rolling dunes, majestic cacti, and a dramatic low-horizon sunset",
+  description: "Procedural sandstone mesas, knife-edge dunes, saguaro cacti, and tumbleweeds",
   palettes: CRIMSON_DESERT_PALETTES,
   renderer: CrimsonDesertTheme,
 };
