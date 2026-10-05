@@ -129,23 +129,35 @@ export default function Home() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-2"
+          className="text-center mb-1 flex flex-col items-center"
         >
-          <h1
-            className="font-semibold tracking-tight"
+          <span
+            className="text-[0.7rem] font-bold tracking-[0.14em] uppercase mb-1"
             style={{
-              fontSize: "clamp(1.1rem, 3vw, 1.4rem)",
+              fontFamily: "var(--font-mono)",
+              color: mounted ? (THEME_REGISTRY[theme].palettes[tod]?.sky ? getSecondaryTextColorForPalette(THEME_REGISTRY[theme].palettes[tod].sky) : "#ffffff") + "90" : "#ffffff90",
+              textShadow: `0 1px 4px rgba(0,0,0,0.15)`,
+            }}
+          >
+            01 · Live Status
+          </span>
+          <h1
+            className="tracking-tight"
+            style={{
+              fontFamily: "var(--font-serif)",
+              fontSize: "clamp(2rem, 5vw, 2.75rem)",
+              fontWeight: 600,
               color: mounted ? (THEME_REGISTRY[theme].palettes[tod]?.sky ? getTextColorForPalette(THEME_REGISTRY[theme].palettes[tod].sky) : "#ffffff") : "#ffffff",
-              textShadow: `0 2px 8px rgba(0,0,0,0.15)`,
+              textShadow: `0 2px 12px rgba(0,0,0,0.25)`,
             }}
           >
             Status
           </h1>
           <p
-            className="text-xs tracking-widest uppercase mt-0.5"
+            className="text-[0.72rem] tracking-[0.12em] uppercase mt-0.5 opacity-75"
             style={{
-              color: mounted ? (THEME_REGISTRY[theme].palettes[tod]?.sky ? getSecondaryTextColorForPalette(THEME_REGISTRY[theme].palettes[tod].sky) : "#ffffff") + "80" : "#ffffff80",
-              textShadow: `0 1px 4px rgba(0,0,0,0.1)`,
+              fontFamily: "var(--font-mono)",
+              color: mounted ? (THEME_REGISTRY[theme].palettes[tod]?.sky ? getSecondaryTextColorForPalette(THEME_REGISTRY[theme].palettes[tod].sky) : "#ffffff") : "#ffffff",
             }}
           >
             Activity Tracker
@@ -181,7 +193,8 @@ export default function Home() {
           href="https://anuraaggrao.com/"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-6 text-xs opacity-60 hover:opacity-100 transition-opacity"
+          className="mt-6 text-[0.75rem] uppercase tracking-wider opacity-60 hover:opacity-100 transition-all px-3.5 py-1.5 rounded-full border border-white/10 hover:border-white/20 bg-black/20 backdrop-blur-sm"
+          style={{ fontFamily: "var(--font-mono)" }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.5 }}

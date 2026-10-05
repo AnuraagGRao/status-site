@@ -97,29 +97,31 @@ function StatusCardComponent({ time, date, status, palette }: StatusCardProps) {
             className="flex flex-col items-center gap-1"
           >
             <div className="flex items-center gap-2 mb-1">
-              <Clock size={14} style={{ color: `${secondaryText}80` }} />
+              <Clock size={13} style={{ color: `${secondaryText}90` }} />
               <span
-                className="text-xs font-medium tracking-widest uppercase"
-                style={{ color: `${secondaryText}80` }}
+                className="text-[0.7rem] font-medium tracking-[0.14em] uppercase"
+                style={{ fontFamily: "var(--font-mono)", color: `${secondaryText}90` }}
               >
                 Local Time
               </span>
             </div>
             <span
-              className="font-light tracking-tight leading-none select-none"
+              className="font-medium tracking-tight leading-none select-none"
               style={{
-                fontSize: "clamp(2.2rem, 5vw, 3.2rem)",
+                fontFamily: "var(--font-mono)",
+                fontSize: "clamp(2.4rem, 5.5vw, 3.4rem)",
                 fontFeatureSettings: '"tnum"',
                 color: mainText,
-                textShadow: `0 2px 8px rgba(0,0,0,0.15), 0 4px 12px rgba(0,0,0,0.1)`,
+                textShadow: `0 2px 10px rgba(0,0,0,0.25)`,
               }}
               suppressHydrationWarning
             >
               {time}
             </span>
             <span
-              className="text-sm font-light tracking-wide"
+              className="text-[0.8rem] font-normal tracking-wider uppercase mt-1"
               style={{
+                fontFamily: "var(--font-mono)",
                 color: `${secondaryText}cc`,
                 textShadow: `0 1px 4px rgba(0,0,0,0.1)`,
               }}
@@ -177,7 +179,7 @@ function StatusCardComponent({ time, date, status, palette }: StatusCardProps) {
                   exit={{ opacity: 0, x: 8 }}
                   transition={{ duration: 0.3 }}
                   className="text-xs font-semibold tracking-widest uppercase"
-                  style={{ color: mainText }}
+                  style={{ fontFamily: "var(--font-mono)", color: mainText }}
                 >
                   {isWorking ? "Working" : "Away"}
                 </motion.span>
