@@ -4,7 +4,6 @@ import { useState, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Shuffle, Download, ChevronDown, ChevronUp, Sun, Sunset, Moon, Sunrise, RotateCcw } from "lucide-react";
 import { type TimeOfDay } from "@/lib/timeUtils";
-import { getSecondaryTextColorForPalette } from "@/lib/colorUtils";
 import { PresetButton } from "@/components/PresetButton";
 import { getAllThemes, type ThemeName } from "@/lib/themes";
 import { PaletteConfig } from "@/lib/themes/themeTypes";
@@ -49,9 +48,6 @@ function ControlsComponent({
   // Determine which lighting preset is active (visual override only, clock remains untouched)
   const currentPreset: "live" | TimeOfDay = visualTimeOverride ?? "live";
 
-  // Compute text colors based on palette
-  const secondaryText = palette ? getSecondaryTextColorForPalette(palette.sky) : "#e0e0e0";
-
   const setPreset = (p: "live" | TimeOfDay) => {
     if (p === "live") {
       onVisualTimeChange(null);
@@ -72,11 +68,12 @@ function ControlsComponent({
       <div
         className="rounded-2xl overflow-hidden"
         style={{
-          background: "rgba(255,255,255,0.08)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          border: "1px solid rgba(255,255,255,0.16)",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.14)",
+          background: "rgba(15, 16, 18, 0.88)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          boxShadow:
+            "0 20px 50px -10px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.12)",
         }}
       >
         {/* ── Toggle header ──────────────────────────────────────── */}
@@ -86,17 +83,16 @@ function ControlsComponent({
           aria-expanded={open}
           aria-label="Toggle scene controls"
           style={{
-            color: `${secondaryText}b3`,
-            textShadow: "0 1px 4px rgba(0,0,0,0.1)",
+            color: "#ECEDEE",
           }}
         >
           <div className="flex items-center gap-2">
-            <Sparkles size={14} className="group-hover:text-white transition-colors" />
-            <span className="text-xs font-semibold tracking-widest uppercase group-hover:text-white transition-colors">
+            <Sparkles size={14} className="text-white group-hover:text-amber-300 transition-colors" />
+            <span className="text-xs font-semibold tracking-widest uppercase text-[#ECEDEE]">
               Scene Controls
             </span>
           </div>
-          <span className="text-xs font-mono uppercase tracking-wider text-white/50 group-hover:text-white/90 transition-colors flex items-center gap-1.5">
+          <span className="text-xs font-mono uppercase tracking-wider text-[#889096] group-hover:text-white transition-colors flex items-center gap-1.5">
             <span>{open ? "Close" : "Customize"}</span>
             {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </span>
@@ -119,7 +115,7 @@ function ControlsComponent({
                 {/* 1. Scene Lighting Selector (Strictly visual — local clock is decoupled) */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: `${secondaryText}90` }}>
+                    <span className="text-xs font-semibold tracking-widest uppercase text-[#889096]">
                       Scene Lighting
                     </span>
                     <span className="text-[0.68rem] font-mono text-white/55 tracking-normal">
@@ -194,7 +190,7 @@ function ControlsComponent({
                 {/* 2. Procedural Landscape Controls */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: `${secondaryText}90` }}>
+                    <span className="text-xs font-semibold tracking-widest uppercase text-[#889096]">
                       Procedural Landscape
                     </span>
                     {seedHex && (
@@ -237,13 +233,12 @@ function ControlsComponent({
                 {/* 3. Scene Theme Selector */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: `${secondaryText}90` }}>
+                    <span className="text-xs font-semibold tracking-widest uppercase text-[#889096]">
                       Theme
                     </span>
                     <button
                       onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-                      className="transition-colors cursor-pointer text-xs font-mono flex items-center gap-1"
-                      style={{ color: `${secondaryText}b3` }}
+                      className="transition-colors cursor-pointer text-xs font-mono flex items-center gap-1 text-[#889096] hover:text-[#ECEDEE]"
                       aria-label="Toggle theme menu"
                       aria-expanded={themeMenuOpen}
                     >
@@ -304,17 +299,17 @@ function ControlsComponent({
                 {/* 4. AMOLED Dark Mode & Save Scenery */}
                 <div className="flex items-center justify-between gap-3 pt-1 border-t border-white/10">
                   <div className="flex flex-col">
-                    <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: `${secondaryText}90` }}>
+                    <span className="text-xs font-semibold tracking-widest uppercase text-[#889096]">
                       AMOLED Mode
                     </span>
-                    <span className="text-[0.68rem] text-white/50">True black (Night scenes)</span>
+                    <span className="text-[0.68rem] text-[#889096]/70">True black (Night scenes)</span>
                   </div>
                   <button
                     onClick={onToggleDarkMode}
-                    className={`min-w-[80px] flex items-center justify-center rounded-lg px-3 py-2 text-xs font-medium border transition-all duration-200 cursor-pointer ${
+                    className={`min-w-[84px] flex items-center justify-center rounded-xl px-3 py-2 text-xs font-medium border transition-all duration-200 cursor-pointer ${
                       darkModeEnabled
-                        ? "text-white bg-white/20 border-white/30 font-semibold"
-                        : "text-white/70 bg-white/10 hover:bg-white/14 border-white/15 hover:text-white"
+                        ? "text-[#0F1011] bg-[#ECEDEE] border-[#ECEDEE] font-bold shadow-sm"
+                        : "text-[#ECEDEE]/75 bg-white/[0.06] hover:bg-white/[0.12] border-white/10 hover:text-white"
                     }`}
                     aria-pressed={darkModeEnabled}
                     aria-label="Toggle AMOLED dark mode"
@@ -327,7 +322,7 @@ function ControlsComponent({
                 <button
                   onClick={onSaveScenery}
                   disabled={onSaveLoading}
-                  className="w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-white/90 hover:text-white bg-white/12 hover:bg-white/18 border border-white/20 text-xs font-medium tracking-wide transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-11"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-[#ECEDEE] hover:text-white bg-white/[0.1] hover:bg-white/[0.16] border border-white/18 text-xs font-semibold tracking-wide transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed min-h-11 shadow-sm"
                   aria-label="Save scenery as PNG image"
                 >
                   <Download size={14} />

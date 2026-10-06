@@ -35,19 +35,9 @@ function StatusCardComponent({ time, date, status, palette }: StatusCardProps) {
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const isAlternateDirection = currentItemIndex % 2 === 1;
 
-  // Compute colors based on palette
-  const { mainText, secondaryText } = useMemo(() => {
-    if (!palette) {
-      return {
-        mainText: "#ffffff",
-        secondaryText: "#e0e0e0",
-      };
-    }
-    return {
-      mainText: getTextColorForPalette(palette.sky),
-      secondaryText: getSecondaryTextColorForPalette(palette.sky),
-    };
-  }, [palette]);
+  // Use crisp, high-contrast Apple dark glass palette matching portf
+  const mainText = "#ECEDEE";
+  const secondaryText = "#889096";
 
   useEffect(() => {
     // Cycle through items every 3 seconds
@@ -65,16 +55,16 @@ function StatusCardComponent({ time, date, status, palette }: StatusCardProps) {
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className="relative w-full max-w-md mx-auto"
     >
-      {/* Glassmorphic card */}
+      {/* Apple Bento Dark Obsidian Glass card */}
       <div
         className="relative rounded-3xl overflow-hidden"
         style={{
-          background: "rgba(255,255,255,0.12)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
-          border: "1px solid rgba(255,255,255,0.22)",
+          background: "rgba(15, 16, 18, 0.88)",
+          backdropFilter: "blur(24px) saturate(180%)",
+          WebkitBackdropFilter: "blur(24px) saturate(180%)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
           boxShadow:
-            "0 8px 48px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.3)",
+            "0 24px 60px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.14)",
         }}
       >
         {/* Top accent bar */}
@@ -83,7 +73,7 @@ function StatusCardComponent({ time, date, status, palette }: StatusCardProps) {
           animate={{
             background: isWorking
               ? `linear-gradient(90deg, ${COLOR_PALETTE.neon.purple}, ${COLOR_PALETTE.neon.magenta})`
-              : `linear-gradient(90deg, ${COLOR_PALETTE.neon.cyan}, ${COLOR_PALETTE.neon.cyan})`,
+              : `linear-gradient(90deg, ${COLOR_PALETTE.neon.cyan}, #00E5FF)`,
           }}
           transition={{ duration: 1 }}
         />

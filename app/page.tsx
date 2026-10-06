@@ -93,14 +93,14 @@ export default function Home() {
   // Deterministic variant seed: depends on date + time-of-day (stable across minutes)
   const variantSeed = mounted
     ? (() => {
-        const d = effectiveTime;
-        const start = new Date(d.getFullYear(), 0, 0);
-        const diff = d.getTime() - start.getTime();
-        const dayOfYear = Math.floor(diff / 86400000);
-        const todIdx = tod === "day" ? 1 : tod === "afternoon" ? 2 : tod === "evening" ? 3 : 4;
-        // Mix in a user-randomized scene variant so time/status remain unchanged
-        return ((dayOfYear * 97 + todIdx * 7919) ^ (sceneVariant >>> 0)) >>> 0;
-      })()
+      const d = effectiveTime;
+      const start = new Date(d.getFullYear(), 0, 0);
+      const diff = d.getTime() - start.getTime();
+      const dayOfYear = Math.floor(diff / 86400000);
+      const todIdx = tod === "day" ? 1 : tod === "afternoon" ? 2 : tod === "evening" ? 3 : 4;
+      // Mix in a user-randomized scene variant so time/status remain unchanged
+      return ((dayOfYear * 97 + todIdx * 7919) ^ (sceneVariant >>> 0)) >>> 0;
+    })()
     : 1;
 
   const PRESET_CYCLE: Array<TimeOfDay | null> = [null, "day", "afternoon", "evening", "night"];
@@ -150,33 +150,24 @@ export default function Home() {
           className="text-center mb-1 flex flex-col items-center"
         >
           <span
-            className="text-[0.7rem] font-bold tracking-[0.14em] uppercase mb-1"
-            style={{
-              fontFamily: "var(--font-mono)",
-              color: mounted ? (THEME_REGISTRY[theme].palettes[tod]?.sky ? getSecondaryTextColorForPalette(THEME_REGISTRY[theme].palettes[tod].sky) : "#ffffff") + "90" : "#ffffff90",
-              textShadow: `0 1px 4px rgba(0,0,0,0.15)`,
-            }}
+            className="text-[0.68rem] font-bold tracking-[0.14em] uppercase mb-1.5 px-3 py-0.5 rounded-full border border-white/12 bg-[#0F1011]/80 backdrop-blur-md text-[#ECEDEE] shadow-sm"
+            style={{ fontFamily: "var(--font-mono)" }}
           >
-            01 · Live Status
+            Live Status
           </span>
           <h1
-            className="tracking-tight"
+            className="tracking-tight text-[#ECEDEE] drop-shadow-[0_2px_16px_rgba(0,0,0,0.8)]"
             style={{
               fontFamily: "var(--font-serif)",
-              fontSize: "clamp(2rem, 5vw, 2.75rem)",
+              fontSize: "clamp(2.2rem, 5.5vw, 3rem)",
               fontWeight: 600,
-              color: mounted ? (THEME_REGISTRY[theme].palettes[tod]?.sky ? getTextColorForPalette(THEME_REGISTRY[theme].palettes[tod].sky) : "#ffffff") : "#ffffff",
-              textShadow: `0 2px 12px rgba(0,0,0,0.25)`,
             }}
           >
             Status
           </h1>
           <p
-            className="text-[0.72rem] tracking-[0.12em] uppercase mt-0.5 opacity-75"
-            style={{
-              fontFamily: "var(--font-mono)",
-              color: mounted ? (THEME_REGISTRY[theme].palettes[tod]?.sky ? getSecondaryTextColorForPalette(THEME_REGISTRY[theme].palettes[tod].sky) : "#ffffff") : "#ffffff",
-            }}
+            className="text-[0.7rem] tracking-[0.15em] uppercase mt-0.5 px-2.5 py-0.5 rounded-full border border-white/10 bg-[#0F1011]/60 backdrop-blur-sm text-[#889096]"
+            style={{ fontFamily: "var(--font-mono)" }}
           >
             Activity Tracker
           </p>
@@ -212,7 +203,7 @@ export default function Home() {
           href="https://anuraaggrao.com/"
           target="_blank"
           rel="noopener noreferrer"
-          className="group mt-3 text-[0.75rem] font-medium uppercase tracking-wider text-white/70 hover:text-white transition-all px-4 py-2 rounded-full border border-white/10 hover:border-white/25 bg-black/30 hover:bg-black/50 backdrop-blur-md shadow-sm flex items-center gap-1.5 cursor-pointer"
+          className="group mt-3 text-[0.75rem] font-medium uppercase tracking-wider text-[#889096] hover:text-[#ECEDEE] transition-all px-4 py-2 rounded-full border border-white/14 hover:border-white/28 bg-[#0F1011]/80 hover:bg-[#0F1011] backdrop-blur-md shadow-lg flex items-center gap-1.5 cursor-pointer"
           style={{ fontFamily: "var(--font-mono)" }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
