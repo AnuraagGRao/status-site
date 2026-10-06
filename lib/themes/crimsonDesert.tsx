@@ -5,6 +5,7 @@ import {
   rngRange,
   rngInt,
   generateProceduralDune,
+  generateAtmosphericMotes,
   Point2D,
 } from "@/lib/procedural";
 
@@ -205,6 +206,16 @@ function CrimsonDesertTheme(props: ThemeComponentProps) {
   const cacti = generateCacti(rng, viewW, viewH);
   const rocks = generateDesertRocks(rng, viewW, viewH, palette.secondary);
   const { stars, shootingStars } = generateDesertStars(rng, viewW, viewH);
+
+  const desertEmbers = generateAtmosphericMotes(rng, 24, viewW, viewH, {
+    colorChoices: [palette.primary, palette.secondary, "#fb923c", "#fde047", "#fca5a5"],
+    minSize: 1.2,
+    maxSize: 3.2,
+    driftXRange: [-16, 20],
+    driftYRange: [-36, -14],
+    durationRange: [4, 7],
+    baseYRange: [viewH * 0.55, viewH * 0.92],
+  });
 
   const isMoon = tod === "evening" || tod === "night";
   const celestialX = viewW * (0.5 + (variantSeed % 20) * 0.015);
@@ -526,6 +537,34 @@ function CrimsonDesertTheme(props: ThemeComponentProps) {
           strokeDasharray="3 3"
         />
       </motion.g>
+
+      {/* ── Rising Thermal Embers & Dust ────────────────────────── */}
+      {desertEmbers.map((ember) => (
+        <motion.circle
+          key={`ember-${ember.id}`}
+          cx={ember.x}
+          cy={ember.y}
+          r={ember.size}
+          fill={ember.color}
+          opacity={ember.opacity}
+          animate={
+            prefersReducedMotion
+              ? undefined
+              : {
+                  y: [ember.y, ember.y + ember.driftY, ember.y],
+                  x: [ember.x, ember.x + ember.driftX, ember.x],
+                  opacity: [0.1, ember.opacity, 0.1],
+                  scale: [0.8, 1.35, 0.8],
+                }
+          }
+          transition={{
+            duration: ember.duration,
+            delay: ember.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
     </motion.svg>
   );
 }

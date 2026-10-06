@@ -5,6 +5,7 @@ import {
   rngRange,
   rngInt,
   generateProceduralRidge,
+  generateAtmosphericMotes,
   Point2D,
 } from "@/lib/procedural";
 
@@ -121,6 +122,16 @@ function CyberAlpineTheme(props: ThemeComponentProps) {
   // 2. Data Streams & Floating Holo-Polyhedra
   const dataStreams = generateDataStreams(rng, viewW, viewH, palette.secondary);
   const polyhedra = generatePolyhedra(rng, viewW, viewH, palette.secondary);
+
+  const cyberSnow = generateAtmosphericMotes(rng, 26, viewW, viewH, {
+    colorChoices: [palette.secondary, "#ffffff", "#00f0ff", "#a5f3fc"],
+    minSize: 1.5,
+    maxSize: 3.5,
+    driftXRange: [12, 28],
+    driftYRange: [25, 45],
+    durationRange: [4, 7],
+    baseYRange: [viewH * 0.1, viewH * 0.85],
+  });
 
   const isMoon = tod === "evening" || tod === "night";
   const celestialX = viewW * 0.5;
@@ -410,6 +421,37 @@ function CyberAlpineTheme(props: ThemeComponentProps) {
           })}
         </motion.g>
       </g>
+
+      {/* ── 8. Drifting Cyber-Snow & Crystal Particles ──────────── */}
+      {cyberSnow.map((flake) => (
+        <motion.rect
+          key={`flake-${flake.id}`}
+          x={flake.x}
+          y={flake.y}
+          width={flake.size}
+          height={flake.size}
+          fill={flake.color}
+          opacity={flake.opacity}
+          filter="url(#neonGlow)"
+          transform={`rotate(45 ${flake.x} ${flake.y})`}
+          animate={
+            prefersReducedMotion
+              ? undefined
+              : {
+                  x: [flake.x, flake.x + flake.driftX, flake.x],
+                  y: [flake.y, flake.y + flake.driftY, flake.y],
+                  opacity: [0.15, flake.opacity, 0.15],
+                  rotate: [45, 225, 405],
+                }
+          }
+          transition={{
+            duration: flake.duration,
+            delay: flake.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
     </motion.svg>
   );
 }

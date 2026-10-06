@@ -193,3 +193,222 @@ export function generateProceduralDune(
   const path = pointsToSmoothPath(crestPoints, true, viewW, viewH);
   return { path, crestPoints };
 }
+
+/**
+ * Procedural Skyscraper Data Structure
+ */
+export interface Skyscraper {
+  id: number;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  spireHeight: number;
+  antennaX: number;
+  antennaY: number;
+  windowRows: number;
+  windowCols: number;
+  litWindows: boolean[][];
+  hasSign: boolean;
+  signText?: string;
+  signColor?: string;
+  hasBeacon: boolean;
+  beaconColor?: string;
+  setbackW?: number;
+  setbackH?: number;
+}
+
+/**
+ * Procedural Skyline Generator
+ * Produces multi-layered urban building silhouettes with randomized architectural profiles,
+ * antenna spires, glowing window matrixes, and neon signage.
+ */
+export function generateProceduralSkyline(
+  rng: () => number,
+  viewW: number,
+  viewH: number,
+  options: {
+    baseY: number;
+    minH: number;
+    maxH: number;
+    minW?: number;
+    maxW?: number;
+    gap?: number;
+    signProbability?: number;
+  }
+): Skyscraper[] {
+  const minW = options.minW ?? 70;
+  const maxW = options.maxW ?? 140;
+  const gap = options.gap ?? 8;
+  const signProb = options.signProbability ?? 0.35;
+  const signTexts = ["01", "KEI", "RAD", "NEO", "77", "◈", "//", "CYBER", "SYS"];
+  const signColors = ["#00f0ff", "#ff007f", "#39ff14", "#ffe600", "#c084fc"];
+
+  const buildings: Skyscraper[] = [];
+  let curX = -40;
+  let id = 0;
+
+  while (curX < viewW + 50) {
+    const w = rngRange(rng, minW, maxW);
+    const h = rngRange(rng, options.minH, options.maxH);
+    const y = options.baseY - h;
+
+    const hasSpire = rng() > 0.45;
+    const spireHeight = hasSpire ? rngRange(rng, 25, 70) : 0;
+    const antennaX = curX + w * (hasSpire ? rngRange(rng, 0.3, 0.7) : 0.5);
+    const antennaY = y - spireHeight;
+
+    const windowRows = rngInt(rng, 5, 12);
+    const windowCols = rngInt(rng, 3, 6);
+    const litWindows: boolean[][] = [];
+    for (let r = 0; r < windowRows; r++) {
+      const row: boolean[] = [];
+      for (let c = 0; c < windowCols; c++) {
+        row.push(rng() > 0.4);
+      }
+      litWindows.push(row);
+    }
+
+    const hasSign = rng() < signProb;
+    const hasBeacon = hasSpire || rng() > 0.5;
+
+    const hasSetback = rng() > 0.5;
+    const setbackW = hasSetback ? w * rngRange(rng, 0.6, 0.85) : undefined;
+    const setbackH = hasSetback ? h * rngRange(rng, 0.15, 0.3) : undefined;
+
+    buildings.push({
+      id: id++,
+      x: curX,
+      y,
+      w,
+      h,
+      spireHeight,
+      antennaX,
+      antennaY,
+      windowRows,
+      windowCols,
+      litWindows,
+      hasSign,
+      signText: hasSign ? rngChoice(rng, signTexts) : undefined,
+      signColor: hasSign ? rngChoice(rng, signColors) : undefined,
+      hasBeacon,
+      beaconColor: rng() > 0.3 ? "#ef4444" : "#ffffff",
+      setbackW,
+      setbackH,
+    });
+
+    curX += w + gap + rngRange(rng, 0, 10);
+  }
+
+  return buildings;
+}
+
+/**
+ * Atmospheric Mote / Particle
+ */
+export interface AtmosphericMote {
+  id: number;
+  x: number;
+  y: number;
+  size: number;
+  color: string;
+  duration: number;
+  delay: number;
+  driftX: number;
+  driftY: number;
+  opacity: number;
+}
+
+/**
+ * Procedural Atmospheric Motes Generator
+ * Produces organic floating motes (pollen, spores, embers, dust, snowflakes, cosmic sparks).
+ */
+export function generateAtmosphericMotes(
+  rng: () => number,
+  count: number,
+  viewW: number,
+  viewH: number,
+  options: {
+    colorChoices: string[];
+    minSize?: number;
+    maxSize?: number;
+    driftXRange?: [number, number];
+    driftYRange?: [number, number];
+    durationRange?: [number, number];
+    baseYRange?: [number, number];
+  }
+): AtmosphericMote[] {
+  const minSize = options.minSize ?? 1.5;
+  const maxSize = options.maxSize ?? 3.5;
+  const driftXRange = options.driftXRange ?? [-12, 12];
+  const driftYRange = options.driftYRange ?? [-24, -8];
+  const durationRange = options.durationRange ?? [4, 8];
+  const yMin = options.baseYRange ? options.baseYRange[0] : 0;
+  const yMax = options.baseYRange ? options.baseYRange[1] : viewH;
+
+  const motes: AtmosphericMote[] = [];
+  for (let i = 0; i < count; i++) {
+    motes.push({
+      id: i,
+      x: rngRange(rng, 0, viewW),
+      y: rngRange(rng, yMin, yMax),
+      size: rngRange(rng, minSize, maxSize),
+      color: rngChoice(rng, options.colorChoices),
+      duration: rngRange(rng, durationRange[0], durationRange[1]),
+      delay: rngRange(rng, 0, 5),
+      driftX: rngRange(rng, driftXRange[0], driftXRange[1]),
+      driftY: rngRange(rng, driftYRange[0], driftYRange[1]),
+      opacity: rngRange(rng, 0.4, 0.9),
+    });
+  }
+  return motes;
+}
+
+/**
+ * Rain Streak Data Structure
+ */
+export interface RainStreak {
+  id: number;
+  x: number;
+  y: number;
+  len: number;
+  speed: number;
+  opacity: number;
+  color: string;
+}
+
+/**
+ * Procedural Rain Streaks Generator
+ */
+export function generateRainStreaks(
+  rng: () => number,
+  count: number,
+  viewW: number,
+  viewH: number,
+  options?: {
+    minLen?: number;
+    maxLen?: number;
+    speedRange?: [number, number];
+    colorChoices?: string[];
+  }
+): RainStreak[] {
+  const minLen = options?.minLen ?? 18;
+  const maxLen = options?.maxLen ?? 42;
+  const speedRange = options?.speedRange ?? [1.2, 2.4];
+  const colors = options?.colorChoices ?? ["#00f0ff", "#38bdf8", "#e0f2fe", "#a5f3fc"];
+
+  const streaks: RainStreak[] = [];
+  for (let i = 0; i < count; i++) {
+    streaks.push({
+      id: i,
+      x: rngRange(rng, -20, viewW + 20),
+      y: rngRange(rng, -50, viewH + 50),
+      len: rngRange(rng, minLen, maxLen),
+      speed: rngRange(rng, speedRange[0], speedRange[1]),
+      opacity: rngRange(rng, 0.25, 0.75),
+      color: rngChoice(rng, colors),
+    });
+  }
+  return streaks;
+}
+

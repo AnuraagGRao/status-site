@@ -6,6 +6,7 @@ import {
   rngInt,
   generateProceduralRidge,
   generateProceduralHills,
+  generateAtmosphericMotes,
   Point2D,
 } from "@/lib/procedural";
 
@@ -267,6 +268,15 @@ function LushLakeTheme(props: ThemeComponentProps) {
   const forest = generateForest(rng, viewW, viewH, palette.primary, palette.secondary);
   const fireflies = generateFireflies(rng, viewW, viewH);
   const reeds = generateReeds(rng, viewW, viewH);
+  const daytimeSpores = generateAtmosphericMotes(rng, 18, viewW, viewH, {
+    colorChoices: ["#fef08a", "#dcfce7", "#ffffff", "#bbf7d0"],
+    minSize: 1.2,
+    maxSize: 2.8,
+    driftXRange: [-18, 18],
+    driftYRange: [-15, 10],
+    durationRange: [5, 9],
+    baseYRange: [viewH * 0.45, viewH * 0.88],
+  });
 
   const isMoon = tod === "evening" || tod === "night";
   const celestialX = viewW * (0.75 + (variantSeed % 15) * 0.01);
@@ -591,6 +601,34 @@ function LushLakeTheme(props: ThemeComponentProps) {
             transition={{
               duration: ff.duration,
               delay: ff.delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          />
+        ))}
+
+      {/* ── 12. Floating Spores & Pollen (Day & Afternoon) ──────── */}
+      {(tod === "day" || tod === "afternoon") &&
+        daytimeSpores.map((spore) => (
+          <motion.circle
+            key={`spore-${spore.id}`}
+            cx={spore.x}
+            cy={spore.y}
+            r={spore.size}
+            fill={spore.color}
+            opacity={spore.opacity}
+            animate={
+              prefersReducedMotion
+                ? undefined
+                : {
+                    y: [spore.y, spore.y + spore.driftY, spore.y],
+                    x: [spore.x, spore.x + spore.driftX, spore.x],
+                    opacity: [0.1, spore.opacity, 0.1],
+                  }
+            }
+            transition={{
+              duration: spore.duration,
+              delay: spore.delay,
               repeat: Infinity,
               ease: "easeInOut",
             }}

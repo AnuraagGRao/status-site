@@ -7,6 +7,9 @@ import {
   generateProceduralRidge,
   generateProceduralHills,
   generateProceduralDune,
+  generateProceduralSkyline,
+  generateAtmosphericMotes,
+  generateRainStreaks,
 } from "@/lib/procedural";
 
 describe("Procedural Utilities", () => {
@@ -106,6 +109,60 @@ describe("Procedural Utilities", () => {
 
       expect(dune.path).toMatch(/^M/);
       expect(dune.crestPoints.length).toBeGreaterThan(2);
+    });
+
+    it("generateProceduralSkyline produces realistic skyscraper buildings", () => {
+      const rng = makePRNG(404);
+      const buildings = generateProceduralSkyline(rng, viewW, viewH, {
+        baseY: 700,
+        minH: 150,
+        maxH: 300,
+      });
+
+      expect(buildings.length).toBeGreaterThan(5);
+      buildings.forEach((b) => {
+        expect(b.w).toBeGreaterThanOrEqual(60);
+        expect(b.h).toBeGreaterThanOrEqual(140);
+        expect(b.windowRows).toBeGreaterThan(0);
+        expect(b.windowCols).toBeGreaterThan(0);
+        expect(b.litWindows.length).toBe(b.windowRows);
+      });
+    });
+
+    it("generateAtmosphericMotes produces floating particles within boundaries", () => {
+      const rng = makePRNG(505);
+      const motes = generateAtmosphericMotes(rng, 20, viewW, viewH, {
+        colorChoices: ["#ffffff", "#00ffff"],
+        minSize: 1,
+        maxSize: 3,
+        driftXRange: [-10, 10],
+        driftYRange: [-20, -5],
+        durationRange: [3, 6],
+      });
+
+      expect(motes.length).toBe(20);
+      motes.forEach((m) => {
+        expect(m.size).toBeGreaterThanOrEqual(1);
+        expect(m.size).toBeLessThanOrEqual(3);
+        expect(m.duration).toBeGreaterThanOrEqual(3);
+        expect(m.duration).toBeLessThanOrEqual(6);
+        expect(["#ffffff", "#00ffff"]).toContain(m.color);
+      });
+    });
+
+    it("generateRainStreaks produces diagonal rain streaks", () => {
+      const rng = makePRNG(606);
+      const rain = generateRainStreaks(rng, 30, viewW, viewH, {
+        minLen: 20,
+        maxLen: 40,
+      });
+
+      expect(rain.length).toBe(30);
+      rain.forEach((r) => {
+        expect(r.len).toBeGreaterThanOrEqual(20);
+        expect(r.len).toBeLessThanOrEqual(40);
+        expect(r.speed).toBeGreaterThan(0);
+      });
     });
   });
 });

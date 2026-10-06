@@ -5,6 +5,7 @@ import {
   rngRange,
   rngInt,
   generateProceduralHills,
+  generateAtmosphericMotes,
   Point2D,
 } from "@/lib/procedural";
 
@@ -167,6 +168,16 @@ function TropicalBeachTheme(props: ThemeComponentProps) {
   const isMoon = tod === "evening" || tod === "night";
   const celestialX = viewW * (0.25 + (variantSeed % 15) * 0.02);
   const celestialY = viewH * (isMoon ? 0.2 : 0.26);
+
+  const coastalSparkles = generateAtmosphericMotes(rng, 22, viewW, viewH, {
+    colorChoices: ["#ffffff", "#e0f2fe", "#fef08a", palette.horizon],
+    minSize: 1.2,
+    maxSize: 3.0,
+    driftXRange: [15, 35],
+    driftYRange: [-10, 8],
+    durationRange: [4, 7],
+    baseYRange: [viewH * 0.65, viewH * 0.88],
+  });
 
   const waveDuration = prefersReducedMotion ? 0.1 : 7;
   const parallaxDuration = prefersReducedMotion ? 0.1 : 24;
@@ -436,6 +447,34 @@ function TropicalBeachTheme(props: ThemeComponentProps) {
           </motion.g>
         );
       })}
+
+      {/* ── Coastal Breeze & Sea Spray Sparkles ─────────────────── */}
+      {coastalSparkles.map((sparkle) => (
+        <motion.circle
+          key={`sparkle-${sparkle.id}`}
+          cx={sparkle.x}
+          cy={sparkle.y}
+          r={sparkle.size}
+          fill={sparkle.color}
+          opacity={sparkle.opacity}
+          animate={
+            prefersReducedMotion
+              ? undefined
+              : {
+                  x: [sparkle.x, sparkle.x + sparkle.driftX, sparkle.x],
+                  y: [sparkle.y, sparkle.y + sparkle.driftY, sparkle.y],
+                  opacity: [0.15, sparkle.opacity, 0.15],
+                  scale: [0.8, 1.3, 0.8],
+                }
+          }
+          transition={{
+            duration: sparkle.duration,
+            delay: sparkle.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
     </motion.svg>
   );
 }

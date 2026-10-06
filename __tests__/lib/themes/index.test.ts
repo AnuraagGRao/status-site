@@ -15,6 +15,7 @@ describe("Theme System", () => {
         "crimson_desert",
         "cyber_alpine",
         "deep_cosmos",
+        "neon_skyline",
       ];
 
       expectedThemes.forEach((themeName) => {
@@ -68,15 +69,22 @@ describe("Theme System", () => {
       expect(theme.id).toBe("deep_cosmos");
       expect(theme.name).toBe("Deep Cosmos");
     });
+
+    it("returns neon skyline theme", () => {
+      const theme = getTheme("neon_skyline");
+      expect(theme.id).toBe("neon_skyline");
+      expect(theme.name).toBe("Neon Skyline");
+    });
   });
 
   describe("getThemeNames", () => {
     it("returns array of theme IDs", () => {
       const names = getThemeNames();
       expect(names).toBeInstanceOf(Array);
-      expect(names.length).toBe(5);
+      expect(names.length).toBe(6);
       expect(names).toContain("lush_lake");
       expect(names).toContain("deep_cosmos");
+      expect(names).toContain("neon_skyline");
     });
   });
 
@@ -84,7 +92,7 @@ describe("Theme System", () => {
     it("returns array of theme objects", () => {
       const themes = getAllThemes();
       expect(themes).toBeInstanceOf(Array);
-      expect(themes.length).toBe(5);
+      expect(themes.length).toBe(6);
       expect(themes[0]).toHaveProperty("id");
       expect(themes[0]).toHaveProperty("name");
     });

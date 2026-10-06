@@ -4,6 +4,7 @@ import { tropicalBeachTheme } from "./tropicalBeach";
 import { crimsonDesertTheme } from "./crimsonDesert";
 import { cyberAlpineTheme } from "./cyberAlpine";
 import { deepCosmosTheme } from "./deepCosmos";
+import { neonSkylineTheme } from "./neonSkyline";
 
 // Export ThemeName type for use in components
 export type { ThemeName };
@@ -17,6 +18,7 @@ export const THEME_REGISTRY: ThemeRegistry = {
   crimson_desert: crimsonDesertTheme,
   cyber_alpine: cyberAlpineTheme,
   deep_cosmos: deepCosmosTheme,
+  neon_skyline: neonSkylineTheme,
 };
 
 /**

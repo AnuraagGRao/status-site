@@ -4,6 +4,7 @@ import {
   makePRNG,
   rngRange,
   rngInt,
+  generateAtmosphericMotes,
   Point2D,
 } from "@/lib/procedural";
 
@@ -168,6 +169,14 @@ function DeepCosmosTheme(props: ThemeComponentProps) {
   const { stars, constellations } = generateStarfield(rng, viewW, viewH);
   const nebulae = generateNebulae(rng, viewW, viewH, palette.primary, palette.secondary);
   const comets = generateComets(rng, viewW, viewH);
+  const cosmicSparks = generateAtmosphericMotes(rng, 28, viewW, viewH, {
+    colorChoices: ["#ffffff", "#67e8f9", "#f472b6", "#a855f7", "#fde047"],
+    minSize: 1.2,
+    maxSize: 3.2,
+    driftXRange: [-18, 18],
+    driftYRange: [-18, 18],
+    durationRange: [3.5, 6.5],
+  });
 
   // 2. Planet & Ring Geometry
   const planetX = viewW * (0.65 + (variantSeed % 12) * 0.012);
@@ -392,6 +401,35 @@ function DeepCosmosTheme(props: ThemeComponentProps) {
           opacity="0.95"
         />
       </g>
+
+      {/* ── 10. Shimmering Stellar Sparks & Cosmic Dust ──────────── */}
+      {cosmicSparks.map((spark) => (
+        <motion.circle
+          key={`spark-${spark.id}`}
+          cx={spark.x}
+          cy={spark.y}
+          r={spark.size}
+          fill={spark.color}
+          filter="url(#starlightGlow)"
+          opacity={spark.opacity}
+          animate={
+            prefersReducedMotion
+              ? undefined
+              : {
+                  x: [spark.x, spark.x + spark.driftX, spark.x],
+                  y: [spark.y, spark.y + spark.driftY, spark.y],
+                  opacity: [0.1, spark.opacity, 0.1],
+                  scale: [0.7, 1.4, 0.7],
+                }
+          }
+          transition={{
+            duration: spark.duration,
+            delay: spark.delay,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      ))}
     </motion.svg>
   );
 }

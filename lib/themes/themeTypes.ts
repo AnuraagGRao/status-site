@@ -48,7 +48,13 @@ export type ThemeRenderer = (props: ThemeComponentProps) => React.ReactNode;
 /**
  * Available themes
  */
-export type ThemeName = "lush_lake" | "tropical_beach" | "crimson_desert" | "cyber_alpine" | "deep_cosmos";
+export type ThemeName =
+  | "lush_lake"
+  | "tropical_beach"
+  | "crimson_desert"
+  | "cyber_alpine"
+  | "deep_cosmos"
+  | "neon_skyline";
 
 /**
  * Theme definition
