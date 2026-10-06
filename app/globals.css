@@ -13,16 +13,49 @@ body {
   height: 100%;
 }
 
-:root {
+:root,
+[data-theme="obsidian"] {
   --font-serif: 'Cormorant Garamond', Georgia, serif;
   --font-sans: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --bg: #0F1011;
-  --surface: #141516;
-  --border: #2C2E31;
-  --border-strong: #3D4044;
-  --text: #ECEDEE;
-  --text-muted: #889096;
+  --bg: #010102;
+  --surface: #0E1015;
+  --border: #23252A;
+  --border-strong: #34343A;
+  --text: #F7F8F8;
+  --text-muted: #8A8F98;
+  --accent: #5E6AD2;
+}
+
+[data-theme="cyber"] {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --bg: #08090E;
+  --surface: rgba(19, 23, 38, 0.75);
+  --border: rgba(139, 92, 246, 0.25);
+  --border-strong: rgba(139, 92, 246, 0.5);
+  --text: #F8FAFC;
+  --text-muted: #A5B4FC;
+  --accent: #8B5CF6;
+}
+
+[data-theme="arcade"] {
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Nunito Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --bg: #0D0E15;
+  --surface: #181A28;
+  --border: #2A2E44;
+  --border-strong: #00FF66;
+  --text: #FFFFFF;
+  --text-muted: #A0A8C0;
+  --accent: #00FF66;
+}
+
+[data-theme="arcade"] body {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.5px, transparent 1.5px);
+  background-size: 20px 20px;
 }
 
 body {

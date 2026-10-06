@@ -35,6 +35,42 @@ export default function Home() {
   const [sceneVariant, setSceneVariant] = useState<number>(1);
   const [theme, setTheme] = useState<ThemeName>("lush_lake");
 
+  // UI Theme (Obsidian / Cyber / Arcade)
+  const UI_THEMES = ["obsidian", "cyber", "arcade"] as const;
+  type UITheme = (typeof UI_THEMES)[number];
+  const UI_THEME_ICONS: Record<UITheme, string> = {
+    obsidian: "🖤",
+    cyber: "⚡",
+    arcade: "🕹️",
+  };
+  const UI_THEME_NAMES: Record<UITheme, string> = {
+    obsidian: "Obsidian",
+    cyber: "Cyber",
+    arcade: "Arcade",
+  };
+
+  const [uiTheme, setUiTheme] = useState<UITheme>("obsidian");
+
+  useEffect(() => {
+    const saved = localStorage.getItem("user-theme") as UITheme;
+    if (saved && UI_THEMES.includes(saved)) {
+      setUiTheme(saved);
+      document.documentElement.setAttribute("data-theme", saved);
+    } else {
+      document.documentElement.setAttribute("data-theme", "obsidian");
+    }
+  }, []);
+
+  const cycleUiTheme = () => {
+    setUiTheme((cur) => {
+      const idx = UI_THEMES.indexOf(cur);
+      const next = UI_THEMES[(idx + 1) % UI_THEMES.length];
+      localStorage.setItem("user-theme", next);
+      document.documentElement.setAttribute("data-theme", next);
+      return next;
+    });
+  };
+
   // Dark mode: auto-detect from prefers-color-scheme, can be toggled
   const prefersDark = usePrefersDarkMode();
   const [darkMode, setDarkMode] = useState<boolean>(false);
@@ -198,20 +234,35 @@ export default function Home() {
           variantSeed={variantSeed}
         />
 
-        {/* Back to portfolio link */}
-        <motion.a
-          href="https://anuraaggrao.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group mt-3 text-[0.75rem] font-medium uppercase tracking-wider text-[#889096] hover:text-[#ECEDEE] transition-all px-4 py-2 rounded-full border border-white/14 hover:border-white/28 bg-[#0F1011]/80 hover:bg-[#0F1011] backdrop-blur-md shadow-lg flex items-center gap-1.5 cursor-pointer"
-          style={{ fontFamily: "var(--font-mono)" }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <span className="transition-transform duration-200 group-hover:-translate-x-0.5">←</span>
-          <span>Back to Portfolio</span>
-        </motion.a>
+        {/* Back to portfolio & Theme toggle */}
+        <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
+          <motion.a
+            href="https://anuraaggrao.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group text-[0.75rem] font-medium uppercase tracking-wider text-[#889096] hover:text-[#ECEDEE] transition-all px-4 py-2 rounded-full border border-white/14 hover:border-white/28 bg-[#0F1011]/80 hover:bg-[#0F1011] backdrop-blur-md shadow-lg flex items-center gap-1.5 cursor-pointer"
+            style={{ fontFamily: "var(--font-mono)" }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <span className="transition-transform duration-200 group-hover:-translate-x-0.5">←</span>
+            <span>Back to Portfolio</span>
+          </motion.a>
+
+          <motion.button
+            onClick={cycleUiTheme}
+            className="text-[0.75rem] font-medium uppercase tracking-wider text-[#889096] hover:text-[#ECEDEE] transition-all px-3 py-2 rounded-full border border-white/14 hover:border-white/28 bg-[#0F1011]/80 hover:bg-[#0F1011] backdrop-blur-md shadow-lg flex items-center gap-1.5 cursor-pointer"
+            style={{ fontFamily: "var(--font-mono)" }}
+            title={`Switch Theme: ${UI_THEME_NAMES[uiTheme]} (Click to cycle)`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <span>{UI_THEME_ICONS[uiTheme]}</span>
+            <span>{UI_THEME_NAMES[uiTheme]}</span>
+          </motion.button>
+        </div>
       </div>
 
       {/* ── Toast notification ───────────────────────────────────── */}
