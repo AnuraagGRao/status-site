@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Status",
   description: "Live activity tracker — see what I'm up to right now.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
