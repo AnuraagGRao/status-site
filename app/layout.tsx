@@ -28,7 +28,7 @@ export default function RootLayout({
       <body className="min-h-full bg-black">
         {children}
         <Script
-          src="https://analytics-hub.anuraag7rao.workers.dev/tracker.js"
+          src="https://analytics.anuraaggrao.com/tracker.js"
           data-project="status"
           strategy="afterInteractive"
         />
