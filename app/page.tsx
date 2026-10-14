@@ -2,7 +2,11 @@
 "use client";
 
 import { useState, useLayoutEffect, useEffect, useRef, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
+
+const PulseStage = dynamic(() => import("@/components/PulseStage"), { ssr: false });
+import MochiBeacon from "@/components/MochiBeacon";
 
 import AnimatedBackground from "@/components/AnimatedBackground";
 import StatusCard from "@/components/StatusCard";
@@ -159,6 +163,12 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen w-full overflow-x-hidden flex flex-col items-center justify-center py-12 px-4">
+      {/* ── 3D Oscilloscope & Global Radar Stage ─────────────────── */}
+      <PulseStage />
+
+      {/* ── Mochi the Zen Capybara Companion Beacon ──────────────── */}
+      <MochiBeacon />
+
       {/* ── Animated background ──────────────────────────────────── */}
       <motion.div
         key={tod}
