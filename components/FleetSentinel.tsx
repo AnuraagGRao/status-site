@@ -17,7 +17,7 @@ const INITIAL_TARGETS: SubdomainTarget[] = [
   { name: "Craft Studio & Atelier", domain: "craft.anuraaggrao.com", url: "https://craft.anuraaggrao.com", category: "3D & Companions", status: "probing", latencyMs: null },
   { name: "Developer Recon Toolkit", domain: "utils.anuraaggrao.com", url: "https://utils.anuraaggrao.com", category: "Dev Tools", status: "probing", latencyMs: null },
   { name: "Battery Health Telemetry", domain: "volt.anuraaggrao.com", url: "https://volt.anuraaggrao.com", category: "IoT & Mobile", status: "probing", latencyMs: null },
-  { name: "Context0 Adaptive Quiz", domain: "quiz.anuraaggrao.com", url: "https://quiz.anuraaggrao.com", category: "FastAPI & Postgres", status: "probing", latencyMs: null },
+  { name: "Context0 Adaptive Quiz", domain: "quiz.anuraaggrao.com", url: "https://quiz.anuraaggrao.com", category: "Edge Migration", status: "probing", latencyMs: null },
   { name: "Reactive Audio DSP", domain: "music.anuraaggrao.com", url: "https://music.anuraaggrao.com", category: "Web Audio", status: "probing", latencyMs: null },
   { name: "Status Biome Sentinel", domain: "status.anuraaggrao.com", url: "https://status.anuraaggrao.com", category: "Observability", status: "probing", latencyMs: null },
   { name: "Tetra Overflow Ultra", domain: "tetra.anuraaggrao.com", url: "https://tetra.anuraaggrao.com", category: "Arcade Engine", status: "probing", latencyMs: null },
