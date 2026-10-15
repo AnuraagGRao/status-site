@@ -14,6 +14,7 @@ import Controls from "@/components/Controls";
 import Toast from "@/components/Toast";
 import VisitorCounter from "@/components/VisitorCounter";
 import KeyboardShortcuts from "@/components/KeyboardShortcuts";
+import FleetSentinel from "@/components/FleetSentinel";
 
 import {
   getStatus,
@@ -243,6 +244,9 @@ export default function Home() {
           palette={mounted ? THEME_REGISTRY[theme].palettes[tod] : undefined}
           variantSeed={variantSeed}
         />
+
+        {/* Fleet Telemetry Sentinel */}
+        <FleetSentinel />
 
         {/* Back to portfolio & Theme toggle */}
         <div className="flex items-center gap-2 mt-3 flex-wrap justify-center">
