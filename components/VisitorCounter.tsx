@@ -9,18 +9,43 @@ import { motion } from "framer-motion";
 export default function VisitorCounter() {
   const [count, setCount] = useState<number>(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
-    // Get or initialize visitor count
+    // 1. Initial cached value from localStorage for instant render
     const storedCount = localStorage.getItem('visitor-count');
-    const currentCount = storedCount ? parseInt(storedCount, 10) : 0;
-    const newCount = currentCount + 1;
-    
-    localStorage.setItem('visitor-count', newCount.toString());
-    setCount(newCount);
-    
-    // Show counter after a brief delay
-    setTimeout(() => setIsVisible(true), 500);
+    const localFallback = storedCount ? parseInt(storedCount, 10) : 75;
+    setCount(localFallback);
+
+    // 2. Fire hit to live analytics-hub ingestion endpoint
+    try {
+      const hitUrl = 'https://analytics.anuraaggrao.com/api/hit?project=status-site&path=/';
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(hitUrl, JSON.stringify({ project: 'status-site', path: '/' }));
+      } else {
+        fetch(hitUrl, { method: 'POST', mode: 'no-cors' }).catch(() => {});
+      }
+    } catch {}
+
+    // 3. Fetch authoritative live visitor count from Cloudflare D1
+    fetch('https://analytics.anuraaggrao.com/api/count')
+      .then((res) => (res.ok ? res.json() : Promise.reject()))
+      .then((data: { ok?: boolean; count?: number }) => {
+        if (typeof data.count === 'number' && data.count > 0) {
+          setCount(data.count);
+          localStorage.setItem('visitor-count', data.count.toString());
+          setIsLive(true);
+        }
+      })
+      .catch(() => {
+        // Increment local fallback on network error
+        const next = localFallback + 1;
+        setCount(next);
+        localStorage.setItem('visitor-count', next.toString());
+      })
+      .finally(() => {
+        setTimeout(() => setIsVisible(true), 300);
+      });
   }, []);
 
   // Split count into digits for animation
@@ -42,7 +67,10 @@ export default function VisitorCounter() {
           border: "1px solid rgba(255, 255, 255, 0.14)",
         }}
       >
-        <span className="text-xs text-[#889096] font-medium tracking-wider">VISITORS</span>
+        <div className="flex items-center gap-1.5">
+          <span className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+          <span className="text-xs text-[#889096] font-medium tracking-wider font-mono">VISITORS</span>
+        </div>
         <div className="flex gap-1">
           {digits.map((digit, index) => (
             <motion.div
