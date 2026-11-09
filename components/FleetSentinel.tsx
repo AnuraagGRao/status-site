@@ -24,6 +24,10 @@ const INITIAL_TARGETS: SubdomainTarget[] = [
   { name: "EpiCountdown Tracker", domain: "countdown.anuraaggrao.com", url: "https://countdown.anuraaggrao.com", category: "Sync Clock", status: "probing", latencyMs: null },
   { name: "Tactile Sensory Suite", domain: "fidget.anuraaggrao.com", url: "https://fidget.anuraaggrao.com", category: "Canvas Physics", status: "probing", latencyMs: null },
   { name: "Edge Telemetry Hub", domain: "analytics.anuraaggrao.com", url: "https://analytics.anuraaggrao.com", category: "Cloudflare D1", status: "probing", latencyMs: null },
+  { name: "Arcade Virtual Portal", domain: "arcade.anuraaggrao.com", url: "https://arcade.anuraaggrao.com", category: "Game Hub", status: "probing", latencyMs: null },
+  { name: "Companion Protocol", domain: "companion.anuraaggrao.com", url: "https://companion.anuraaggrao.com", category: "Roguelite", status: "probing", latencyMs: null },
+  { name: "Orbital Gravity Lab", domain: "orbit.anuraaggrao.com", url: "https://orbit.anuraaggrao.com", category: "Simulation", status: "probing", latencyMs: null },
+  { name: "Re:Start A:Gain?", domain: "restart.anuraaggrao.com", url: "https://restart.anuraaggrao.com", category: "Masocore", status: "probing", latencyMs: null },
 ];
 
 export default function FleetSentinel() {
