@@ -13,6 +13,7 @@ interface SubdomainTarget {
 }
 
 const INITIAL_TARGETS: SubdomainTarget[] = [
+  { name: "Shift Command Circadian HUD", domain: "time.anuraaggrao.com", url: "https://time.anuraaggrao.com", category: "Circadian Ops", status: "probing", latencyMs: null },
   { name: "Main Systems Portal", domain: "anuraaggrao.com", url: "https://anuraaggrao.com", category: "Portfolio", status: "probing", latencyMs: null },
   { name: "Craft Studio & Atelier", domain: "craft.anuraaggrao.com", url: "https://craft.anuraaggrao.com", category: "3D & Companions", status: "probing", latencyMs: null },
   { name: "Developer Recon Toolkit", domain: "utils.anuraaggrao.com", url: "https://utils.anuraaggrao.com", category: "Dev Tools", status: "probing", latencyMs: null },
